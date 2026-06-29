@@ -32,7 +32,15 @@ import {
   Mountain,
   AlertTriangle,
   CheckCircle,
-  Award
+  Award,
+  GraduationCap,
+  Trash2,
+  Flame,
+  Lightbulb,
+  Apple,
+  HeartPulse,
+  Heart,
+  Building2
 } from "lucide-react";
 import { ShelterProject, ProjectInput } from "./types";
 import { translations } from "./locales";
@@ -40,6 +48,10 @@ import ThreeDView from "./components/ThreeDView";
 import BlueprintView from "./components/BlueprintView";
 import SavedProjects from "./components/SavedProjects";
 import InteractiveMap from "./components/InteractiveMap";
+import { SmartCityMetrics } from "./components/SmartCityMetrics";
+import { LogisticsView } from "./components/LogisticsView";
+import { CampInfrastructureView } from "./components/CampInfrastructureView";
+import { EvacuationSimulationView } from "./components/EvacuationSimulationView";
 import { ResponsiveContainer, LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend } from "recharts";
 
 // @ts-ignore
@@ -106,7 +118,10 @@ const defaultProjectAr: ShelterProject = {
     soilType: "صخرية متماسكة",
     climateType: "بارد عاصف وممطر",
     localMaterials: ["ألواح خشبية وأطر خشبية", "خيام وأقمشة مشمعة متينة"],
-    durationOfUse: "شبه دائم (6 - 24 شهر)"
+    durationOfUse: "شبه دائم (6 - 24 شهر)",
+    childrenCount: 36,
+    elderlyCount: 18,
+    disabledCount: 6
   },
   generalAnalysis: "نظراً لتأثير الكارثة المتمثل في زلزال مدمر في منطقة جبل الزاوية ذات الطبيعة الصخرية المتماسكة وفي ظل طقس شتوي بارد وعاصف، فإن الهدف الهندسي الأول هو البناء السريع والآمن المقاوم للهزات الارتدادية. نوصي باعتماد هيكل أساس فولاذي خفيف أو إطار خشبي عازل لمرونته الكبيرة في امتصاص الصدمات الأرضية. المساحة الصخرية تدعم التثبيت الخارجي الممتاز دون حفر عميق، ويتطلب المناخ البارد عزل رطوبة سفلي قوي وسقوفاً مائلة للتخلص السريع من الثلوج والأمطار.",
   suggestedModel: {
@@ -159,7 +174,13 @@ const defaultProjectAr: ShelterProject = {
         { name: "نقطة عيادة ميدانية", x: 45, y: 15, w: 10, h: 8, type: "medical" },
         { name: "مبنى الإدارة الميدانية", x: 45, y: 27, w: 10, h: 7, type: "admin" },
         { name: "حمامات عامة مشتركة", x: 5, y: 27, w: 8, h: 5, type: "latrines" },
-        { name: "مساحة آمنة للأطفال", x: 17, y: 25, w: 23, h: 9, type: "space" }
+        { name: "مساحة صديقة للأطفال", x: 17, y: 25, w: 12, h: 9, type: "space" },
+        { name: "محطة طاقة شمسية مركزية", x: 30, y: 25, w: 6, h: 5, type: "solar" },
+        { name: "نقطة إطفاء ومكافحة الحريق", x: 10, y: 34, w: 5, h: 4, type: "fire" },
+        { name: "نقطة فرز وإدارة النفايات", x: 20, y: 34, w: 5, h: 4, type: "waste" },
+        { name: "مدرسة مؤقتة للأطفال", x: 30, y: 34, w: 10, h: 6, type: "school" },
+        { name: "مركز توزيع الغذاء والتغذية", x: 45, y: 36, w: 10, h: 6, type: "nutrition" },
+        { name: "عيادة الدعم النفسي والاجتماعي", x: 5, y: 36, w: 8, h: 5, type: "support" }
       ]
     }
   },
@@ -250,7 +271,10 @@ const defaultProjectEn: ShelterProject = {
     soilType: "Rocky / Solid Ground",
     climateType: "Cold, Windy & Rainy",
     localMaterials: ["Timber Panels & Frames", "Heavy Canvas & Tarpaulin"],
-    durationOfUse: "Semi-permanent (6 - 24 months)"
+    durationOfUse: "Semi-permanent (6 - 24 months)",
+    childrenCount: 36,
+    elderlyCount: 18,
+    disabledCount: 6
   },
   generalAnalysis: "Given the devastating impact of an earthquake in the East Aleppo region, featuring solid rocky ground, and amid cold and windy winter weather, the primary engineering objective is rapid and safe assembly resilient to aftershocks. We recommend adopting a lightweight steel frame or insulating timber frames due to their high flexibility in absorbing ground shocks. The rocky ground provides excellent external anchoring without deep excavations, and the cold climate requires robust underfloor moisture insulation and sloped roofs to shed snow and rainwater rapidly.",
   suggestedModel: {
@@ -308,7 +332,13 @@ const defaultProjectEn: ShelterProject = {
         { name: "Field Health Clinic", x: 45, y: 15, w: 10, h: 8, type: "medical" },
         { name: "Field Administration Unit", x: 45, y: 27, w: 10, h: 7, type: "admin" },
         { name: "Shared Public Latrines", x: 5, y: 27, w: 8, h: 5, type: "latrines" },
-        { name: "Safe Child-Friendly Space", x: 17, y: 25, w: 23, h: 9, type: "space" }
+        { name: "Safe Child-Friendly Space", x: 17, y: 25, w: 12, h: 9, type: "space" },
+        { name: "Central Solar Power Station", x: 30, y: 25, w: 6, h: 5, type: "solar" },
+        { name: "Firefighting & Hydrant Station", x: 10, y: 34, w: 5, h: 4, type: "fire" },
+        { name: "Solid Waste & Recycling Unit", x: 20, y: 34, w: 5, h: 4, type: "waste" },
+        { name: "Temporary Primary School", x: 30, y: 34, w: 10, h: 6, type: "school" },
+        { name: "Emergency Food & Nutrition Unit", x: 45, y: 36, w: 10, h: 6, type: "nutrition" },
+        { name: "Psychosocial Counselling Space", x: 5, y: 36, w: 8, h: 5, type: "support" }
       ]
     }
   },
@@ -571,7 +601,10 @@ export default function App() {
     soilType: t.soilOptions[0],
     climateType: t.climateOptions[0],
     localMaterials: [t.localMaterialOptions[1].label, t.localMaterialOptions[6].label],
-    durationOfUse: t.durationOptions[1]
+    durationOfUse: t.durationOptions[1],
+    childrenCount: 30,
+    elderlyCount: 15,
+    disabledCount: 5
   });
 
   const [project, setProject] = useState<ShelterProject | null>(defaultProjectAr);
@@ -579,7 +612,7 @@ export default function App() {
   const [loadingStep, setLoadingStep] = useState<string>("");
   const [errorMsg, setErrorMsg] = useState<string>("");
   const [successMsg, setSuccessMsg] = useState<string>("");
-  const [activeResultTab, setActiveResultTab] = useState<'design' | 'bom' | 'timeline' | 'budget' | 'map'>('design');
+  const [activeResultTab, setActiveResultTab] = useState<'design' | 'bom' | 'timeline' | 'budget' | 'map' | 'infrastructure' | 'metrics' | 'logistics' | 'simulation'>('design');
 
   const [sharing, setSharing] = useState<boolean>(false);
   const [shareId, setShareId] = useState<string | null>(null);
@@ -959,10 +992,34 @@ export default function App() {
                 : ["ألواح عزل مركبة مسبقة الصنع", "أطر مدعمة ومقاومة للصدأ", "باب حديد خفيف محكم الإغلاق"]
             },
             campLayout: {
-              gridRows: Math.max(2, Math.floor(Math.sqrt(totalUnits))),
-              gridCols: Math.ceil(totalUnits / Math.max(2, Math.floor(Math.sqrt(totalUnits)))),
-              spacing: 5.0,
-              facilities: [
+              gridRows: input.designType === "smart_city" ? 15 : Math.max(2, Math.floor(Math.sqrt(totalUnits))),
+              gridCols: input.designType === "smart_city" ? 20 : Math.ceil(totalUnits / Math.max(2, Math.floor(Math.sqrt(totalUnits)))),
+              spacing: input.designType === "smart_city" ? 10.0 : 5.0,
+              facilities: input.designType === "smart_city" ? [
+                { name: isEn ? "Al-Yasmin Smart Neighborhood (North Sector)" : "حي الياسمين السكني الذكي (القطاع الشمالي)", x: 30, y: 40, w: 60, h: 40, type: "neighborhood" as const },
+                { name: isEn ? "Al-Amal Smart Neighborhood (West Sector)" : "حي الأمل السكني الذكي (القطاع الغربي)", x: 30, y: 110, w: 60, h: 40, type: "neighborhood" as const },
+                { name: isEn ? "Al-Salam Smart Neighborhood (East Sector)" : "حي السلام السكني الذكي (القطاع الشرقي)", x: 260, y: 40, w: 60, h: 40, type: "neighborhood" as const },
+                { name: isEn ? "Smart Arterial Boulevard & Transit Loop" : "شريان البوليفارد الرئيسي وحلقة العبور الذكية", x: 100, y: 85, w: 150, h: 12, type: "road_hub" as const },
+                { name: isEn ? "Central Traffic Management & Transit Safety Hub" : "برج التحكم الذكي بحركة المرور وسلامة العبور", x: 170, y: 105, w: 12, h: 10, type: "traffic_control" as const },
+                { name: isEn ? "Central Oasis Ecological Park & Play Areas" : "متنزه الواحة الخضراء المركزي والمساحات الترفيهية", x: 110, y: 115, w: 130, h: 45, type: "green_zone" as const },
+                { name: isEn ? "Central IoT Smart Bazaar & Cooperative Market" : "سوق البازار المركزي الذكي والجمعيات التعاونية", x: 120, y: 40, w: 50, h: 25, type: "market" as const },
+                { name: isEn ? "Integrated Central Smart Field Hospital & Emergency Unit" : "مجمع مستشفى المدينة المركزي الذكي وطوارئ العناية", x: 180, y: 40, w: 60, h: 30, type: "hospital" as const },
+                { name: isEn ? "Primary & Secondary Smart School and Digital Library" : "مدرسة التكنولوجيا والتعليم الأساسي والمكتبة الرقمية", x: 30, y: 180, w: 80, h: 35, type: "school" as const },
+                { name: isEn ? "Integrated IoT Smart Utility Grid (Water, Waste, Energy Controls)" : "مجمع الخدمات والشبكات الذكي (تحكم ومراقبة شبكة الخدمات)", x: 260, y: 110, w: 60, h: 25, type: "utility_hub" as const },
+                { name: isEn ? "Autonomous Future Expansion Zone (Phase II Growth)" : "منطقة النمو الحضري والتوسع الذاتي المستقبلي (المرحلة الثانية)", x: 140, y: 180, w: 180, h: 50, type: "expansion_zone" as const },
+                { name: isEn ? "Central Solar Power Microgrid" : "حقل الألواح والميكروجريد الشمسي المركزي", x: 270, y: 145, w: 40, h: 20, type: "solar" as const },
+                { name: isEn ? "Main Reverse Osmosis Water Station" : "محطة تحلية مياه الشرب والضخ اللوجستي", x: 130, y: 5, w: 30, h: 20, type: "water" as const },
+                { name: isEn ? "Smart Solid Waste & Bio-gas Recycler" : "نقطة فرز وتدوير النفايات الذكية وتوليد الغاز الحيوي", x: 20, y: 5, w: 25, h: 15, type: "waste" as const },
+                { name: isEn ? "Central Smart Administration Command Center" : "مبنى القيادة والتحكم الإداري والأمن اللوجستي", x: 200, y: 5, w: 40, h: 20, type: "admin" as const },
+                ...Array.from({ length: 15 }).map((_, i) => ({
+                  name: isEn ? `Smart Living Unit S-${i + 1}` : `وحدة سكنية مجهزة S-${i + 1}`,
+                  x: 40 + (i % 5) * 10,
+                  y: 50 + Math.floor(i / 5) * 10,
+                  w: 5,
+                  h: 5,
+                  type: "shelter" as const
+                }))
+              ] : [
                 ...Array.from({ length: Math.min(12, totalUnits) }).map((_, i) => ({
                   name: isEn ? `Shelter Unit ${i+1}` : `وحدة إيواء عائلي ${i+1}`,
                   x: 5 + (i % 3) * 12,
@@ -971,9 +1028,9 @@ export default function App() {
                   h: 5,
                   type: "shelter" as const
                 })),
-                { name: isEn ? "Camp Water Tank" : "خزان مياه المخيم", x: 42, y: 5, w: 8, h: 7, type: "water" },
-                { name: isEn ? "Field Clinic" : "العيادة الميدانية", x: 42, y: 15, w: 9, h: 8, type: "medical" },
-                { name: isEn ? "Safe Zone & Playground" : "مساحة آمنة وملاعب", x: 5, y: 25, w: 22, h: 8, type: "space" }
+                { name: isEn ? "Camp Water Tank" : "خزان مياه المخيم", x: 42, y: 5, w: 8, h: 7, type: "water" as const },
+                { name: isEn ? "Field Clinic" : "العيادة الميدانية", x: 42, y: 15, w: 9, h: 8, type: "medical" as const },
+                { name: isEn ? "Safe Zone & Playground" : "مساحة آمنة وملاعب", x: 5, y: 25, w: 22, h: 8, type: "space" as const }
               ]
             }
           },
@@ -1242,6 +1299,23 @@ export default function App() {
           </div>
 
           <div className="flex flex-col gap-4">
+            {/* Input - Design Type Selector */}
+            <div>
+              <label className="text-xs font-semibold text-slate-700 block mb-1.5 flex items-center gap-1.5">
+                <Building2 className="w-3.5 h-3.5 text-indigo-500" />
+                {t.designTypeLabel}
+              </label>
+              <select
+                id="input-design-type"
+                value={input.designType}
+                onChange={(e) => handleInputChange("designType", e.target.value as "camp" | "smart_city")}
+                className={`w-full border border-slate-200 rounded-xl p-3 text-xs focus:ring-2 focus:ring-indigo-500 ${lang === "ar" ? "text-right" : "text-left"} focus:outline-none bg-slate-50/50`}
+              >
+                <option value="camp">{t.designTypeCamp}</option>
+                <option value="smart_city">{t.designTypeSmartCity}</option>
+              </select>
+            </div>
+
             {/* Input - Location Name */}
             <div>
               <label className="text-xs font-semibold text-slate-700 block mb-1.5 flex items-center gap-1.5">
@@ -1289,7 +1363,10 @@ export default function App() {
                   min="5"
                   max="10000"
                   value={input.peopleCount}
-                  onChange={(e) => handleInputChange("peopleCount", parseInt(e.target.value) || 0)}
+                  onChange={(e) => {
+                    const val = parseInt(e.target.value) || 0;
+                    handleInputChange("peopleCount", val);
+                  }}
                   className="w-full border border-slate-200 rounded-xl p-3 text-xs font-mono text-center focus:ring-2 focus:ring-indigo-500 focus:outline-none bg-slate-50/50"
                 />
               </div>
@@ -1308,6 +1385,63 @@ export default function App() {
                   onChange={(e) => handleInputChange("availableArea", parseInt(e.target.value) || 0)}
                   className="w-full border border-slate-200 rounded-xl p-3 text-xs font-mono text-center focus:ring-2 focus:ring-indigo-500 focus:outline-none bg-slate-50/50"
                 />
+              </div>
+            </div>
+
+            {/* Demographic Classification Section */}
+            <div className="bg-slate-50/80 p-4 rounded-xl border border-slate-100 flex flex-col gap-2.5">
+              <div className="flex flex-col gap-0.5">
+                <span className="text-[11px] font-extrabold text-indigo-700 flex items-center gap-1">
+                  <Users className="w-3.5 h-3.5" />
+                  {t.demographicSectionTitle}
+                </span>
+                <span className="text-[9px] text-slate-400">
+                  {t.demographicSectionSub}
+                </span>
+              </div>
+              <div className="grid grid-cols-3 gap-2">
+                <div>
+                  <span className="text-[9px] font-bold text-slate-500 block mb-1 text-center truncate">
+                    {t.childrenLabel}
+                  </span>
+                  <input
+                    id="input-children-count"
+                    type="number"
+                    min="0"
+                    max={input.peopleCount}
+                    value={input.childrenCount !== undefined ? input.childrenCount : Math.round(input.peopleCount * 0.3)}
+                    onChange={(e) => handleInputChange("childrenCount", Math.min(input.peopleCount, parseInt(e.target.value) || 0))}
+                    className="w-full border border-slate-200 rounded-lg p-2 text-xs font-mono text-center focus:ring-2 focus:ring-indigo-500 focus:outline-none bg-white"
+                  />
+                </div>
+                <div>
+                  <span className="text-[9px] font-bold text-slate-500 block mb-1 text-center truncate">
+                    {t.elderlyLabel}
+                  </span>
+                  <input
+                    id="input-elderly-count"
+                    type="number"
+                    min="0"
+                    max={input.peopleCount}
+                    value={input.elderlyCount !== undefined ? input.elderlyCount : Math.round(input.peopleCount * 0.15)}
+                    onChange={(e) => handleInputChange("elderlyCount", Math.min(input.peopleCount, parseInt(e.target.value) || 0))}
+                    className="w-full border border-slate-200 rounded-lg p-2 text-xs font-mono text-center focus:ring-2 focus:ring-indigo-500 focus:outline-none bg-white"
+                  />
+                </div>
+                <div>
+                  <span className="text-[9px] font-bold text-slate-500 block mb-1 text-center truncate">
+                    {t.disabledLabel}
+                  </span>
+                  <input
+                    id="input-disabled-count"
+                    type="number"
+                    min="0"
+                    max={input.peopleCount}
+                    value={input.disabledCount !== undefined ? input.disabledCount : Math.round(input.peopleCount * 0.05)}
+                    onChange={(e) => handleInputChange("disabledCount", Math.min(input.peopleCount, parseInt(e.target.value) || 0))}
+                    className="w-full border border-slate-200 rounded-lg p-2 text-xs font-mono text-center focus:ring-2 focus:ring-indigo-500 focus:outline-none bg-white"
+                  />
+                </div>
               </div>
             </div>
 
@@ -1531,6 +1665,250 @@ export default function App() {
                 </div>
 
               </div>
+
+              {/* International Sphere Standards & Demographic Compliance Card */}
+              {(() => {
+                const pc = project.input.peopleCount || 100;
+                const cc = project.input.childrenCount !== undefined ? project.input.childrenCount : Math.round(pc * 0.3);
+                const ec = project.input.elderlyCount !== undefined ? project.input.elderlyCount : Math.round(pc * 0.15);
+                const dc = project.input.disabledCount !== undefined ? project.input.disabledCount : Math.round(pc * 0.05);
+                const adults = pc - (cc + ec + dc);
+
+                // Sphere standard calculations
+                const waterPerDay = pc * 15;
+                const reserveWater3Days = waterPerDay * 3;
+                const toiletsNeeded = Math.ceil(pc / 20);
+                const safeSpacing = project.blueprints?.campLayout?.spacing || 4.5;
+                const accessibleUnitsNeeded = Math.max(1, Math.ceil(dc + ec * 0.4));
+
+                return (
+                  <div className="bg-white p-5 rounded-2xl shadow-sm border border-slate-100 flex flex-col gap-5">
+                    
+                    {/* Section Header */}
+                    <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-3 border-b border-slate-100">
+                      <div className="flex items-center gap-2.5">
+                        <div className="p-2 rounded-xl bg-teal-50 text-teal-600">
+                          <Award className="w-5 h-5" />
+                        </div>
+                        <div className="text-right">
+                          <h3 className="font-extrabold text-slate-800 text-xs sm:text-sm">
+                            {lang === "ar" 
+                              ? "تكامل المعايير الإنسانية الدولية وديموغرافيا السكان (Sphere)" 
+                              : "International Humanitarian & Demographic Standards Compliance (Sphere)"}
+                          </h3>
+                          <p className="text-[10px] text-slate-400 mt-0.5">
+                            {lang === "ar" 
+                              ? "مراجعة تخطيط الملاجئ والمخيم آلياً للتأكد من ملاءمتها لمعايير إسفير العالمية لإغاثة الكوارث" 
+                              : "Automated auditing of structural and layout models against global Sphere standards for emergency relief"}
+                          </p>
+                        </div>
+                      </div>
+
+                      <span className="inline-flex items-center gap-1.5 text-[10px] font-black px-3 py-1.5 rounded-xl bg-teal-50 text-teal-700 border border-teal-100 uppercase tracking-wide shrink-0">
+                        <Check className="w-3.5 h-3.5" />
+                        {lang === "ar" ? "مطابق لمعايير إسفير" : "Sphere Compliant"}
+                      </span>
+                    </div>
+
+                    {/* Content Grid */}
+                    <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
+                      
+                      {/* Left: Demographics & Accessibility (5 cols) */}
+                      <div className="lg:col-span-5 bg-slate-50/50 p-4 rounded-2xl border border-slate-100 flex flex-col justify-between gap-4">
+                        <div>
+                          <h4 className="text-xs font-black text-slate-700 flex items-center gap-1.5 mb-3">
+                            <Users className="w-4 h-4 text-teal-600" />
+                            {lang === "ar" ? "تحليل وتصنيف ديموغرافيا السكان" : "Demographic Breakdown Analysis"}
+                          </h4>
+                          
+                          {/* Demographic progress bars */}
+                          <div className="flex flex-col gap-3">
+                            {/* Children */}
+                            <div>
+                              <div className="flex justify-between items-center text-[10px] mb-1">
+                                <span className="font-bold text-slate-600">
+                                  {lang === "ar" ? `الأطفال (دون 12 سنة): ${cc} شخص` : `Children (under 12): ${cc} persons`}
+                                </span>
+                                <span className="font-bold text-slate-500">{((cc / pc) * 100).toFixed(0)}%</span>
+                              </div>
+                              <div className="w-full bg-slate-100 h-1.5 rounded-full overflow-hidden">
+                                <div className="bg-sky-400 h-full rounded-full" style={{ width: `${(cc / pc) * 100}%` }}></div>
+                              </div>
+                            </div>
+
+                            {/* Elderly */}
+                            <div>
+                              <div className="flex justify-between items-center text-[10px] mb-1">
+                                <span className="font-bold text-slate-600">
+                                  {lang === "ar" ? `كبار السن (فوق 60 سنة): ${ec} شخص` : `Elderly (over 60): ${ec} persons`}
+                                </span>
+                                <span className="font-bold text-slate-500">{((ec / pc) * 100).toFixed(0)}%</span>
+                              </div>
+                              <div className="w-full bg-slate-100 h-1.5 rounded-full overflow-hidden">
+                                <div className="bg-amber-400 h-full rounded-full" style={{ width: `${(ec / pc) * 100}%` }}></div>
+                              </div>
+                            </div>
+
+                            {/* Disabled */}
+                            <div>
+                              <div className="flex justify-between items-center text-[10px] mb-1">
+                                <span className="font-bold text-slate-600">
+                                  {lang === "ar" ? `ذوي الاحتياجات الخاصة والإعاقات: ${dc} شخص` : `People with Disabilities: ${dc} persons`}
+                                </span>
+                                <span className="font-bold text-slate-500">{((dc / pc) * 100).toFixed(0)}%</span>
+                              </div>
+                              <div className="w-full bg-slate-100 h-1.5 rounded-full overflow-hidden">
+                                <div className="bg-rose-400 h-full rounded-full" style={{ width: `${(dc / pc) * 100}%` }}></div>
+                              </div>
+                            </div>
+
+                            {/* Adults */}
+                            <div>
+                              <div className="flex justify-between items-center text-[10px] mb-1">
+                                <span className="font-bold text-slate-600">
+                                  {lang === "ar" ? `البالغون الآخرون: ${adults} شخص` : `Other Adults: ${adults} persons`}
+                                </span>
+                                <span className="font-bold text-slate-500">{((adults / pc) * 100).toFixed(0)}%</span>
+                              </div>
+                              <div className="w-full bg-slate-100 h-1.5 rounded-full overflow-hidden">
+                                <div className="bg-teal-400 h-full rounded-full" style={{ width: `${(adults / pc) * 100}%` }}></div>
+                              </div>
+                            </div>
+                          </div>
+                        </div>
+
+                        {/* Universal Design Accessibility Section */}
+                        <div className="bg-teal-50 border border-teal-100 rounded-xl p-3 flex flex-col gap-1.5">
+                          <span className="text-[10px] font-black text-teal-800 flex items-center gap-1">
+                            <CheckSquare className="w-3.5 h-3.5 text-teal-600" />
+                            {lang === "ar" ? "التصميم الشامل الميسّر" : "Accessible & Universal Design"}
+                          </span>
+                          <p className="text-[10px] text-teal-900 leading-relaxed text-justify">
+                            {lang === "ar" 
+                              ? `بناءً على وجود ${dc} شخص من ذوي الإعاقة و ${ec} كبار سن، فقد خصص النظام تلقائياً نسبة ${Math.ceil((accessibleUnitsNeeded / project.suggestedModel.totalUnitsNeeded) * 100)}% من الوحدات (لا تقل عن ${accessibleUnitsNeeded} وحدات) لتكون مهيأة بالكامل: تشمل منحدرات صعود خرسانية أو خشبية متينة (Ramps) بدلاً من السلالم، ومداخل أبواب متسعة بعرض 1.1م، وأبواب حمامات أوسع للسماح بدخول المقاعد المتحركة والتحرك بأمان.`
+                              : `Based on ${dc} persons with disabilities and ${ec} elderly individuals, the system has automatically allocated ${Math.ceil((accessibleUnitsNeeded / project.suggestedModel.totalUnitsNeeded) * 100)}% of shelters (at least ${accessibleUnitsNeeded} units) to be fully accessible. This includes sturdy wooden or concrete access ramps instead of stairs, widened 1.1m entrance doors, and widened bathroom doors to ensure wheelchair mobility.`}
+                          </p>
+                        </div>
+                      </div>
+
+                      {/* Right: Core Sphere Standards (7 cols) */}
+                      <div className="lg:col-span-7 flex flex-col gap-3">
+                        
+                        {/* 1. Water Supply */}
+                        <div className="bg-white p-3 rounded-xl border border-slate-100 hover:border-teal-100 transition-all flex flex-col gap-2">
+                          <div className={`flex justify-between items-start gap-2 ${lang === 'ar' ? 'flex-row-reverse' : 'flex-row'}`}>
+                            <div className={`flex items-center gap-2 ${lang === 'ar' ? 'flex-row-reverse' : 'flex-row'}`}>
+                              <div className="p-1.5 rounded-lg bg-sky-50 text-sky-600">
+                                <Droplets className="w-4 h-4" />
+                              </div>
+                              <div className="flex flex-col">
+                                <span className="text-xs font-black text-slate-800">
+                                  {lang === "ar" ? "معيار المياه الإغاثي اليومي" : "Daily Water Supply Standard"}
+                                </span>
+                                <span className="text-[10px] text-slate-400">
+                                  {lang === "ar" ? "الحد الأدنى لمتطلبات البقاء: 15 لتر/شخص/يوم" : "Minimum survival requirement: 15 Liters/person/day"}
+                                </span>
+                              </div>
+                            </div>
+                            <span className="inline-flex items-center gap-1 text-[9px] font-bold px-2 py-0.5 rounded-full bg-sky-50 text-sky-700 border border-sky-100 flex-shrink-0">
+                              <Check className="w-3 h-3" />
+                              {lang === "ar" ? "طاقة كافية" : "Adequate"}
+                            </span>
+                          </div>
+                          
+                          <div className={`bg-slate-50 p-2.5 rounded-lg text-right ${lang === 'ar' ? 'text-right' : 'text-left'}`}>
+                            <span className="text-xs font-black text-slate-700 block">
+                              {lang === "ar" 
+                                ? `إجمالي احتياج المياه اليومي للمخيم: ${waterPerDay.toLocaleString()} لتر` 
+                                : `Total Daily Camp Water Required: ${waterPerDay.toLocaleString()} Liters`}
+                            </span>
+                            <p className="text-[10px] text-slate-500 mt-1 leading-normal">
+                              {lang === "ar" 
+                                ? `توصيات خزان التخزين: تم تصميم بنية تحتية تشمل خزانات بسعة إجمالية ${reserveWater3Days.toLocaleString()} لتر لتأمين احتياطي أمان كافٍ لـ 3 أيام في حالات الطوارئ وانقطاع الإمدادات.` 
+                                : `Storage recommendation: Designed infrastructure includes cistern storage tanks of ${reserveWater3Days.toLocaleString()} Liters to secure a robust 3-day safety reserve for emergency interruptions.`}
+                            </p>
+                          </div>
+                        </div>
+
+                        {/* 2. Toilets & Latrines */}
+                        <div className="bg-white p-3 rounded-xl border border-slate-100 hover:border-teal-100 transition-all flex flex-col gap-2">
+                          <div className={`flex justify-between items-start gap-2 ${lang === 'ar' ? 'flex-row-reverse' : 'flex-row'}`}>
+                            <div className={`flex items-center gap-2 ${lang === 'ar' ? 'flex-row-reverse' : 'flex-row'}`}>
+                              <div className="p-1.5 rounded-lg bg-teal-50 text-teal-600">
+                                <Activity className="w-4 h-4" />
+                              </div>
+                              <div className="flex flex-col">
+                                <span className="text-xs font-black text-slate-800">
+                                  {lang === "ar" ? "معيار المرافق الصحية والصرف الصحي" : "Sanitation & Latrine Standard"}
+                                </span>
+                                <span className="text-[10px] text-slate-400">
+                                  {lang === "ar" ? "الحد الأقصى: مرحاض واحد لكل 20 شخصاً" : "Maximum: 1 toilet per 20 persons"}
+                                </span>
+                              </div>
+                            </div>
+                            <span className="inline-flex items-center gap-1 text-[9px] font-bold px-2 py-0.5 rounded-full bg-teal-50 text-teal-700 border border-teal-100 flex-shrink-0">
+                              <Check className="w-3 h-3" />
+                              {lang === "ar" ? "آمن وصحي" : "Hygienic"}
+                            </span>
+                          </div>
+                          
+                          <div className={`bg-slate-50 p-2.5 rounded-lg text-right ${lang === 'ar' ? 'text-right' : 'text-left'}`}>
+                            <span className="text-xs font-black text-slate-700 block">
+                              {lang === "ar" 
+                                ? `الحد الأدنى للمراحيض المطلوبة للمخيم: ${toiletsNeeded} مراحيض` 
+                                : `Minimum Restrooms Required for Camp: ${toiletsNeeded} Latrines`}
+                            </span>
+                            <p className="text-[10px] text-slate-500 mt-1 leading-normal">
+                              {lang === "ar" 
+                                ? "يتم توزيع المراحيض بالتساوي مع فصل تام بين الرجال والنساء وتوفير إضاءة ومفاتيح قفل داخلية لتأمين الخصوصية والسلامة للأطفال والنساء." 
+                                : "Toilets are distributed with total gender segregation, equipped with locks and internal lighting to secure dignity and safety for women and children."}
+                            </p>
+                          </div>
+                        </div>
+
+                        {/* 3. Clearance Spacing */}
+                        <div className="bg-white p-3 rounded-xl border border-slate-100 hover:border-teal-100 transition-all flex flex-col gap-2">
+                          <div className={`flex justify-between items-start gap-2 ${lang === 'ar' ? 'flex-row-reverse' : 'flex-row'}`}>
+                            <div className={`flex items-center gap-2 ${lang === 'ar' ? 'flex-row-reverse' : 'flex-row'}`}>
+                              <div className="p-1.5 rounded-lg bg-amber-50 text-amber-600">
+                                <Maximize className="w-4 h-4" />
+                              </div>
+                              <div className="flex flex-col">
+                                <span className="text-xs font-black text-slate-800">
+                                  {lang === "ar" ? "التباعد الإلزامي لمقاومة انتشار الحرائق" : "Mandatory Spacing & Firebreak Standard"}
+                                </span>
+                                <span className="text-[10px] text-slate-400">
+                                  {lang === "ar" ? "التباعد القياسي بين الملاجئ: من 3 إلى 6 أمتار" : "Standard separation between shelters: 3 to 6 meters"}
+                                </span>
+                              </div>
+                            </div>
+                            <span className="inline-flex items-center gap-1 text-[9px] font-bold px-2 py-0.5 rounded-full bg-emerald-50 text-emerald-700 border border-emerald-100 flex-shrink-0">
+                              <Check className="w-3 h-3" />
+                              {lang === "ar" ? "تباعد آمن" : "Safe Spacing"}
+                            </span>
+                          </div>
+                          
+                          <div className={`bg-slate-50 p-2.5 rounded-lg text-right ${lang === 'ar' ? 'text-right' : 'text-left'}`}>
+                            <span className="text-xs font-black text-slate-700 block">
+                              {lang === "ar" 
+                                ? `مسافة التباعد المعتمدة بالمخيم: ${safeSpacing} أمتار` 
+                                : `Adopted Camp Spacing Distance: ${safeSpacing} meters`}
+                            </span>
+                            <p className="text-[10px] text-slate-500 mt-1 leading-normal">
+                              {lang === "ar" 
+                                ? `المسافة الحالية (${safeSpacing}م) تحقق معايير الوقاية المتقدمة من الحرائق وتوفر ممرات إجلاء عريضة لفرق الإسعاف وتدعم جودة التهوية الطبيعية والتعرض الشمسي المباشر للوحدات.` 
+                                : `The current spacing (${safeSpacing}m) complies with advanced fireproofing guidelines, offers wide evacuation corridors for relief teams, and supports natural ventilation and solar exposure.`}
+                            </p>
+                          </div>
+                        </div>
+
+                      </div>
+
+                    </div>
+
+                  </div>
+                );
+              })()}
 
               {/* Automated Site Risk Analysis & Safety Score Section */}
               {(() => {
@@ -1782,6 +2160,17 @@ export default function App() {
                     🗺️ {lang === "ar" ? "الخارطة التفاعلية الجغرافية" : "Interactive Camp Map"}
                   </button>
                   <button
+                    id="tab-results-infrastructure-btn"
+                    onClick={() => setActiveResultTab("infrastructure")}
+                    className={`flex-1 py-4 px-4 text-xs font-extrabold text-center border-b-2 whitespace-nowrap transition-all ${
+                      activeResultTab === "infrastructure"
+                        ? "border-indigo-600 text-indigo-700 bg-white"
+                        : "border-transparent text-slate-500 hover:text-slate-800 hover:bg-slate-50"
+                    }`}
+                  >
+                    ⚡ {lang === "ar" ? "البنية التحتية والمرافق" : "Infrastructure & Facilities"}
+                  </button>
+                  <button
                     id="tab-results-bom-btn"
                     onClick={() => setActiveResultTab("bom")}
                     className={`flex-1 py-4 px-4 text-xs font-extrabold text-center border-b-2 whitespace-nowrap transition-all ${
@@ -1814,6 +2203,41 @@ export default function App() {
                   >
                     💰 {t.tabBudget}
                   </button>
+                  {project?.input?.designType === "smart_city" && (
+                    <button
+                      id="tab-results-metrics-btn"
+                      onClick={() => setActiveResultTab("metrics")}
+                      className={`flex-1 py-4 px-4 text-xs font-extrabold text-center border-b-2 whitespace-nowrap transition-all ${
+                        activeResultTab === "metrics"
+                          ? "border-indigo-600 text-indigo-700 bg-white"
+                          : "border-transparent text-slate-500 hover:text-slate-800 hover:bg-slate-50"
+                      }`}
+                    >
+                      📊 {t.tabMetrics}
+                    </button>
+                  )}
+                  <button
+                    id="tab-results-logistics-btn"
+                    onClick={() => setActiveResultTab("logistics")}
+                    className={`flex-1 py-4 px-4 text-xs font-extrabold text-center border-b-2 whitespace-nowrap transition-all ${
+                      activeResultTab === "logistics"
+                        ? "border-indigo-600 text-indigo-700 bg-white"
+                        : "border-transparent text-slate-500 hover:text-slate-800 hover:bg-slate-50"
+                    }`}
+                  >
+                    🚚 {t.tabLogistics}
+                  </button>
+                  <button
+                    id="tab-results-simulation-btn"
+                    onClick={() => setActiveResultTab("simulation")}
+                    className={`flex-1 py-4 px-4 text-xs font-extrabold text-center border-b-2 whitespace-nowrap transition-all ${
+                      activeResultTab === "simulation"
+                        ? "border-indigo-600 text-indigo-700 bg-white"
+                        : "border-transparent text-slate-500 hover:text-slate-800 hover:bg-slate-50"
+                    }`}
+                  >
+                    🚨 {lang === "ar" ? "محاكاة الإخلاء والطوارئ" : "Emergency & Evac Simulation"}
+                  </button>
                 </nav>
 
                 <div className="p-5">
@@ -1841,6 +2265,16 @@ export default function App() {
                     <InteractiveMap
                       project={project}
                       lang={lang}
+                    />
+                  )}
+
+                  {/* TAB: COMPLETE CAMP INFRASTRUCTURE & FACILITIES DESIGN */}
+                  {activeResultTab === "infrastructure" && (
+                    <CampInfrastructureView
+                      totalUnits={project.suggestedModel.totalUnitsNeeded}
+                      peopleCount={project.input.peopleCount}
+                      lang={lang}
+                      project={project}
                     />
                   )}
 
@@ -2628,6 +3062,34 @@ export default function App() {
                         </div>
                       </div>
                     </div>
+                  )}
+
+                  {activeResultTab === "metrics" && project?.input?.designType === "smart_city" && (
+                    <SmartCityMetrics
+                      peopleCount={project.input.peopleCount}
+                      totalUnits={project.suggestedModel.totalUnitsNeeded}
+                      lang={lang}
+                    />
+                  )}
+
+                  {activeResultTab === "logistics" && (
+                    <LogisticsView
+                      totalUnits={project.suggestedModel.totalUnitsNeeded}
+                      peopleCount={project.input.peopleCount}
+                      lang={lang}
+                      designType={project.input.designType}
+                      locationName={project.input.locationName}
+                      disasterType={project.input.disasterType}
+                    />
+                  )}
+
+                  {activeResultTab === "simulation" && (
+                    <EvacuationSimulationView
+                      totalUnits={project?.suggestedModel?.totalUnitsNeeded}
+                      peopleCount={project?.input?.peopleCount}
+                      lang={lang}
+                      project={project}
+                    />
                   )}
                 </div>
               </div>

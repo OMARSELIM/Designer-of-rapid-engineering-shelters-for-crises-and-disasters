@@ -42,7 +42,8 @@ function generateHeuristicProject(input: any) {
     climateType = "معتدل",
     localMaterials = [],
     durationOfUse = "6 أشهر",
-    language = "ar"
+    language = "ar",
+    designType = "camp"
   } = input;
 
   const isEn = language === "en";
@@ -182,72 +183,288 @@ function generateHeuristicProject(input: any) {
   
   const facilities: any[] = [];
   
-  // Place family shelters
-  let count = 0;
-  for (let r = 0; r < gridRows; r++) {
-    for (let c = 0; c < gridCols; c++) {
-      if (count < totalUnitsNeeded) {
-        facilities.push({
-          name: isEn ? `Family Unit ${count + 1}` : `وحدة سكنية عائلية ${count + 1}`,
-          x: c * (4 + spacing) + 2,
-          y: r * (4.3 + spacing) + 5,
-          w: 4,
-          h: 4.3,
-          type: "shelter"
-        });
-        count++;
+  if (designType === "smart_city") {
+    // Generate a beautiful, structured Smart City Grid!
+    // Total width/height is larger for a smart city
+    const totalWidth = 350;
+    const totalHeight = 280;
+
+    // 1. Residential neighborhoods (أحياء سكنية)
+    facilities.push({
+      name: isEn ? "Al-Yasmin Smart Neighborhood (North Sector)" : "حي الياسمين السكني الذكي (القطاع الشمالي)",
+      x: 30,
+      y: 40,
+      w: 60,
+      h: 40,
+      type: "neighborhood"
+    });
+    facilities.push({
+      name: isEn ? "Al-Amal Smart Neighborhood (West Sector)" : "حي الأمل السكني الذكي (القطاع الغربي)",
+      x: 30,
+      y: 110,
+      w: 60,
+      h: 40,
+      type: "neighborhood"
+    });
+    facilities.push({
+      name: isEn ? "Al-Salam Smart Neighborhood (East Sector)" : "حي السلام السكني الذكي (القطاع الشرقي)",
+      x: 260,
+      y: 40,
+      w: 60,
+      h: 40,
+      type: "neighborhood"
+    });
+
+    // 2. Road grids & Arterials (شبكات الطرق وممرات المرور)
+    facilities.push({
+      name: isEn ? "Smart Arterial Boulevard & Transit Loop" : "شريان البوليفارد الرئيسي وحلقة العبور الذكية",
+      x: 100,
+      y: 85,
+      w: 150,
+      h: 12,
+      type: "road_hub"
+    });
+    facilities.push({
+      name: isEn ? "Central Traffic Management & Transit Safety Hub" : "برج التحكم الذكي بحركة المرور وسلامة العبور",
+      x: 170,
+      y: 105,
+      w: 12,
+      h: 10,
+      type: "traffic_control"
+    });
+
+    // 3. Central Green Space (مناطق خضراء وحدائق)
+    facilities.push({
+      name: isEn ? "Central Oasis Ecological Park & Play Areas" : "متنزه الواحة الخضراء المركزي والمساحات الترفيهية",
+      x: 110,
+      y: 115,
+      w: 130,
+      h: 45,
+      type: "green_zone"
+    });
+
+    // 4. Markets & Commercial hubs (أسواق ومحلات تجارية)
+    facilities.push({
+      name: isEn ? "Central IoT Smart Bazaar & Cooperative Market" : "سوق البازار المركزي الذكي والجمعيات التعاونية",
+      x: 120,
+      y: 40,
+      w: 50,
+      h: 25,
+      type: "market"
+    });
+
+    // 5. Hospital & Clinics (مستشفيات متكاملة)
+    facilities.push({
+      name: isEn ? "Integrated Central Smart Field Hospital & Emergency Unit" : "مجمع مستشفى المدينة المركزي الذكي وطوارئ العناية",
+      x: 180,
+      y: 40,
+      w: 60,
+      h: 30,
+      type: "hospital"
+    });
+
+    // 6. Schools & Classrooms (مدارس ذكية)
+    facilities.push({
+      name: isEn ? "Primary & Secondary Smart School and Digital Library" : "مدرسة التكنولوجيا والتعليم الأساسي والمكتبة الرقمية",
+      x: 30,
+      y: 180,
+      w: 80,
+      h: 35,
+      type: "school"
+    });
+
+    // 7. IoT Integrated Utility Hub & Service Networks (شبكات الخدمات المتكاملة)
+    facilities.push({
+      name: isEn ? "Integrated IoT Smart Utility Grid (Water, Waste, Energy Controls)" : "مجمع الخدمات والشبكات الذكي (تحكم ومراقبة شبكة الخدمات)",
+      x: 260,
+      y: 110,
+      w: 60,
+      h: 25,
+      type: "utility_hub"
+    });
+
+    // 8. Future expansion zone (التوسع المستقبلي)
+    facilities.push({
+      name: isEn ? "Autonomous Future Expansion Zone (Phase II Growth)" : "منطقة النمو الحضري والتوسع الذاتي المستقبلي (المرحلة الثانية)",
+      x: 140,
+      y: 180,
+      w: 180,
+      h: 50,
+      type: "expansion_zone"
+    });
+
+    // Standard services placed strategically
+    facilities.push({
+      name: isEn ? "Central Solar Power Microgrid" : "حقل الألواح والميكروجريد الشمسي المركزي",
+      x: 270,
+      y: 145,
+      w: 40,
+      h: 20,
+      type: "solar"
+    });
+    facilities.push({
+      name: isEn ? "Main Reverse Osmosis Water Station" : "محطة تحلية مياه الشرب والضخ اللوجستي",
+      x: 130,
+      y: 5,
+      w: 30,
+      h: 20,
+      type: "water"
+    });
+    facilities.push({
+      name: isEn ? "Smart Solid Waste & Bio-gas Recycler" : "نقطة فرز وتدوير النفايات الذكية وتوليد الغاز الحيوي",
+      x: 20,
+      y: 5,
+      w: 25,
+      h: 15,
+      type: "waste"
+    });
+    facilities.push({
+      name: isEn ? "Central Smart Administration Command Center" : "مبنى القيادة والتحكم الإداري والأمن اللوجستي",
+      x: 200,
+      y: 5,
+      w: 40,
+      h: 20,
+      type: "admin"
+    });
+
+    // Standard individual shelters to flesh out the map
+    for (let i = 0; i < 15; i++) {
+      const col = i % 5;
+      const row = Math.floor(i / 5);
+      facilities.push({
+        name: isEn ? `Smart Living Unit S-${i + 1}` : `وحدة سكنية مجهزة S-${i + 1}`,
+        x: 40 + col * 10,
+        y: 50 + row * 10,
+        w: 5,
+        h: 5,
+        type: "shelter"
+      });
+    }
+
+  } else {
+    // Place family shelters
+    let count = 0;
+    for (let r = 0; r < gridRows; r++) {
+      for (let c = 0; c < gridCols; c++) {
+        if (count < totalUnitsNeeded) {
+          facilities.push({
+            name: isEn ? `Family Unit ${count + 1}` : `وحدة سكنية عائلية ${count + 1}`,
+            x: c * (4 + spacing) + 2,
+            y: r * (4.3 + spacing) + 5,
+            w: 4,
+            h: 4.3,
+            type: "shelter"
+          });
+          count++;
+        }
       }
     }
+
+    // Add communal facilities
+    const totalWidth = gridCols * (4 + spacing) + 10;
+    const totalHeight = gridRows * (4.3 + spacing) + 15;
+
+    facilities.push({
+      name: isEn ? "Main Water Storage Cistern" : "خزان المياه الرئيسي للمجمع",
+      x: totalWidth / 2 - 2,
+      y: 1,
+      w: 4,
+      h: 3,
+      type: "water"
+    });
+
+    facilities.push({
+      name: isEn ? "Crisis Health Clinic" : "المركز الطبي وعيادة الميدان",
+      x: 2,
+      y: 1,
+      w: 6,
+      h: 4,
+      type: "medical"
+    });
+
+    facilities.push({
+      name: isEn ? "Administration & Logistics Tent" : "خيمة الإدارة والتنسيق اللوجستي",
+      x: totalWidth - 8,
+      y: 1,
+      w: 6,
+      h: 4,
+      type: "admin"
+    });
+
+    facilities.push({
+      name: isEn ? "Safe Social Space / Children Play" : "المساحة المجتمعية الآمنة وألعاب الأطفال",
+      x: totalWidth / 2 - 4,
+      y: totalHeight - 5,
+      w: 8,
+      h: 4,
+      type: "space"
+    });
+
+    facilities.push({
+      name: isEn ? "Communal Wash & Latrine Block" : "كتلة دورات المياه العامة والغسيل المشترك",
+      x: 2,
+      y: totalHeight - 5,
+      w: 6,
+      h: 3,
+      type: "latrines"
+    });
+
+    // Basic Infrastructure (البنية الأساسية)
+    facilities.push({
+      name: isEn ? "Central Solar Energy & Power Grid" : "محطة الطاقة الشمسية وتوليد الكهرباء المركزية",
+      x: totalWidth - 8,
+      y: totalHeight - 5,
+      w: 5,
+      h: 3,
+      type: "solar"
+    });
+
+    facilities.push({
+      name: isEn ? "Primary Firefighting & Water Point" : "نقطة الإطفاء المركزية ومكافحة الحريق",
+      x: Math.round(totalWidth / 2) - 1,
+      y: Math.round(totalHeight / 2),
+      w: 3,
+      h: 2,
+      type: "fire"
+    });
+
+    facilities.push({
+      name: isEn ? "Solid Waste & Recycling Management" : "نقطة جمع وإعادة تدوير وإدارة النفايات",
+      x: 2,
+      y: Math.round(totalHeight / 2),
+      w: 4,
+      h: 3,
+      type: "waste"
+    });
+
+    // Humanitarian Facilities (المرافق الإنسانية)
+    facilities.push({
+      name: isEn ? "Temporary School & Activity Center" : "المدرسة المؤقتة ومركز أنشطة التعليم",
+      x: Math.round(totalWidth / 2) + 6,
+      y: totalHeight - 5,
+      w: 7,
+      h: 4,
+      type: "school"
+    });
+
+    facilities.push({
+      name: isEn ? "Emergency Food & Nutrition Center" : "مركز توزيع الأغذية والدعم الغذائي",
+      x: totalWidth - 16,
+      y: 1,
+      w: 6,
+      h: 4,
+      type: "nutrition"
+    });
+
+    facilities.push({
+      name: isEn ? "Psychosocial Support & Counselling Hub" : "مركز الدعم النفسي والاجتماعي الميداني",
+      x: 10,
+      y: 1,
+      w: 5,
+      h: 4,
+      type: "support"
+    });
   }
-
-  // Add communal facilities
-  const totalWidth = gridCols * (4 + spacing) + 10;
-  const totalHeight = gridRows * (4.3 + spacing) + 15;
-
-  facilities.push({
-    name: isEn ? "Main Water Storage Cistern" : "خزان المياه الرئيسي للمجمع",
-    x: totalWidth / 2 - 2,
-    y: 1,
-    w: 4,
-    h: 3,
-    type: "water"
-  });
-
-  facilities.push({
-    name: isEn ? "Crisis Health Clinic" : "المركز الطبي وعيادة الميدان",
-    x: 2,
-    y: 1,
-    w: 6,
-    h: 4,
-    type: "medical"
-  });
-
-  facilities.push({
-    name: isEn ? "Administration & Logistics Tent" : "خيمة الإدارة والتنسيق اللوجستي",
-    x: totalWidth - 8,
-    y: 1,
-    w: 6,
-    h: 4,
-    type: "admin"
-  });
-
-  facilities.push({
-    name: isEn ? "Safe Social Space / Children Play" : "المساحة المجتمعية الآمنة وألعاب الأطفال",
-    x: totalWidth / 2 - 4,
-    y: totalHeight - 5,
-    w: 8,
-    h: 4,
-    type: "space"
-  });
-
-  facilities.push({
-    name: isEn ? "Communal Wash & Latrine Block" : "كتلة دورات المياه العامة والغسيل المشترك",
-    x: 2,
-    y: totalHeight - 5,
-    w: 6,
-    h: 3,
-    type: "latrines"
-  });
 
   // Material list calculation
   const totalMaterialCostPerUnit = 1200;
@@ -563,6 +780,9 @@ app.post("/api/shelter/generate", async (req, res) => {
       climateType,
       localMaterials,
       durationOfUse,
+      childrenCount,
+      elderlyCount,
+      disabledCount,
       language
     } = input;
 
@@ -593,11 +813,18 @@ All names, descriptions, room names, material names, instructions, and analysis 
 - Disaster type: ${disasterType}
 - Target location: ${locationName}
 - Target population size: ${peopleCount} people
+  * Specific Demographics: ${childrenCount || 0} children, ${elderlyCount || 0} elderly, and ${disabledCount || 0} individuals with disabilities or special needs.
 - Available land area: ${availableArea} sq meters
 - Geotechnical soil type: ${soilType}
 - Prevailing climate: ${climateType}
 - Local raw materials available: ${localMaterials && localMaterials.length > 0 ? localMaterials.join(", ") : "None specified"}
 - Target duration of utility: ${durationOfUse}
+
+International Humanitarian Standards (Sphere Standards) Requirements:
+1. Water Supply: Sphere standard specifies at least 15 liters of water per person per day. Calculate the total daily water required for the population and reflect this in your designs and material descriptions.
+2. Sanitation: Sphere standard specifies at most 20 people per toilet/latrine. Ensure your camp layout and design contains enough toilets.
+3. Spacing: Sphere standard requires safe clearance distances between family shelter units (minimum 3-6 meters firebreak separation).
+4. Accessibility / Universal Design: Provide fully accessible shelters with ramp fittings and widened toilet entries for disabled/elderly individuals. Reflect this in your suggested models, materials, and descriptions.
 
 Engineering & Structural Requirements:
 1. Floor Plan: A highly rational internal space allocation (e.g., sleeping area, private kitchenette, integrated private latrine, main door, windows, beds) with relative meter coordinates.
@@ -611,11 +838,18 @@ Engineering & Structural Requirements:
 - نوع الكارثة: ${disasterType}
 - الموقع الجغرافي: ${locationName}
 - عدد الأشخاص المطلوب إيواؤهم: ${peopleCount} شخص
+  * تفصيل الديموغرافيا: ${childrenCount || 0} أطفال، ${elderlyCount || 0} كبار سن، و ${disabledCount || 0} من ذوي الاحتياجات الخاصة والإعاقات.
 - مساحة الأرض المتاحة: ${availableArea} متر مربع
 - طبيعة التربة: ${soilType}
 - الظروف المناخية: ${climateType}
 - المواد المتوفرة محلياً: ${localMaterials && localMaterials.length > 0 ? localMaterials.join("، ") : "لا توجد مواد محددة"}
 - مدة الاستخدام المستهدفة: ${durationOfUse}
+
+تكامل المعايير الإنسانية الدولية (معايير إسفير - Sphere Standards):
+1. إمدادات المياه: تنص معايير إسفير على توفير 15 لترًا من الماء لكل شخص يوميًا كحد أدنى. احسب إجمالي الاحتياج المائي اليومي وصمم البنية التحتية لتستوعبه.
+2. الصرف الصحي: تنص معايير إسفير على تخصيص مرحاض واحد لكل 20 شخصًا كحد أقصى. يرجى حساب عدد المراحيض المطلوبة للمخيم والتأكد من إضافتها.
+3. التباعد الآمن: تتطلب المعايير تباعدًا آمنًا يبلغ من 3 إلى 6 أمتار بين الوحدات السكنية كحواجز ضد انتشار الحرائق ولحفظ الخصوصية والكرامة الإنسانية.
+4. تيسير الوصول (التصميم الشامل): تأمين نسبة كافية من الملاجئ لتكون مجهزة بمنحدرات صعود (Ramps) بدلاً من السلالم، وتوسيع أبواب الملاجئ ومرافق المياه والصرف لتلائم المقاعد المتحركة لذوي الإعاقة وكبار السن.
 
 المتطلبات الهندسية:
 1. المخطط الهندسي (Floor Plan): يجب أن يحتوي على توزيع داخلي منطقي للملجأ (مثل: مناطق النوم، حمام مدمج أو خارجي، مطبخ تحضيري صغير، المداخل، النوافذ، الأسرّة) مع إحداثيات نسبية واضحة ومقاسات دقيقة بالمتر (مثلاً وحدة سكنية طولها 5م وعرضها 5م).
@@ -734,7 +968,7 @@ Engineering & Structural Requirements:
                             y: { type: Type.NUMBER, description: "Vertical layout coordinate in meters" },
                             w: { type: Type.NUMBER, description: "Component footprint width in meters" },
                             h: { type: Type.NUMBER, description: "Component footprint height in meters" },
-                            type: { type: Type.STRING, description: "Facility type, must be exactly one of: 'shelter' | 'water' | 'medical' | 'latrines' | 'admin' | 'space'" }
+                            type: { type: Type.STRING, description: "Facility type, must be exactly one of: 'shelter' | 'water' | 'medical' | 'latrines' | 'admin' | 'space' | 'solar' | 'fire' | 'waste' | 'school' | 'nutrition' | 'support' | 'neighborhood' | 'road_hub' | 'green_zone' | 'market' | 'hospital' | 'traffic_control' | 'expansion_zone' | 'utility_hub'" }
                           },
                           required: ["name", "x", "y", "w", "h", "type"]
                         }

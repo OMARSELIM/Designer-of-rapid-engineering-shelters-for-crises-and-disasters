@@ -30,6 +30,8 @@ export interface TranslationType {
   tabTimeline: string;
   tabBudget: string;
   tab3D: string;
+  tabMetrics: string;
+  tabLogistics: string;
   btnSave: string;
   btnExportCSV: string;
   btnExportBIM: string;
@@ -78,6 +80,17 @@ export interface TranslationType {
   budgetTotal: string;
   budgetChartTitle: string;
   budgetInUSD: string;
+  demographicSectionTitle: string;
+  demographicSectionSub: string;
+  childrenLabel: string;
+  elderlyLabel: string;
+  disabledLabel: string;
+  sphereWaterLabel: string;
+  sphereToiletsLabel: string;
+  sphereDistanceLabel: string;
+  designTypeLabel: string;
+  designTypeCamp: string;
+  designTypeSmartCity: string;
   soilOptions: string[];
   disasterOptions: string[];
   climateOptions: string[];
@@ -118,6 +131,8 @@ export const translations: Record<"ar" | "en", TranslationType> = {
     tabTimeline: "جدول التنفيذ (Schedule)",
     tabBudget: "الميزانية والتكلفة (Budget)",
     tab3D: "النموذج ثلاثي الأبعاد (3D WebGL)",
+    tabMetrics: "مؤشرات المدينة الذكية (Metrics)",
+    tabLogistics: "سلسلة الإمداد واللوجستيات (Logistics)",
     btnSave: "حفظ التصميم الحالي",
     btnExportCSV: "تصدير جدول الكميات (CSV)",
     btnExportBIM: "تصدير مخطط BIM (IFC)",
@@ -166,6 +181,17 @@ export const translations: Record<"ar" | "en", TranslationType> = {
     budgetTotal: "التكلفة الكلية المتوقعة للمشروع",
     budgetChartTitle: "توزيع التكاليف الإجمالي بالدولار الأمريكي",
     budgetInUSD: "القيمة (بالدولار)",
+    demographicSectionTitle: "تصنيف ديموغرافيا السكان والاحتياجات الخاصة",
+    demographicSectionSub: "حدد تركيبة السكان لتخصيص ملاجئ مهيأة ومطابقة للمعايير الإنسانية الدولية",
+    childrenLabel: "الأطفال (دون 12 سنة):",
+    elderlyLabel: "كبار السن (فوق 60 سنة):",
+    disabledLabel: "ذوي الإعاقة والاحتياجات الخاصة:",
+    sphereWaterLabel: "إجمالي المياه المطلوبة يومياً (Sphere):",
+    sphereToiletsLabel: "إجمالي عدد المراحيض المطلوبة (Sphere):",
+    sphereDistanceLabel: "تباعد الأمان الإلزامي بين الوحدات:",
+    designTypeLabel: "نوع المخطط ونموذج الإعمار:",
+    designTypeCamp: "مخيم إغاثي ميداني سريع (Emergency Camp)",
+    designTypeSmartCity: "مدينة ذكية مؤقتة متكاملة (Smart City Generator)",
     disasterOptions: [
       "زلزال",
       "فيضان",
@@ -235,6 +261,8 @@ export const translations: Record<"ar" | "en", TranslationType> = {
     tabTimeline: "Construction Schedule",
     tabBudget: "Cost Estimation & Budget",
     tab3D: "Interactive 3D WebGL",
+    tabMetrics: "Smart City Metrics",
+    tabLogistics: "Logistics & Supply Chain",
     btnSave: "Save Configuration",
     btnExportCSV: "Export BOM as CSV",
     btnExportBIM: "Export BIM Model (IFC)",
@@ -283,6 +311,17 @@ export const translations: Record<"ar" | "en", TranslationType> = {
     budgetTotal: "Total Project Cost Estimate",
     budgetChartTitle: "Capital Cost Allocation Chart (USD)",
     budgetInUSD: "Value (USD)",
+    demographicSectionTitle: "Demographic Classification & Special Needs",
+    demographicSectionSub: "Define population demographics to allocate adapted shelters and comply with Sphere humanitarian standards",
+    childrenLabel: "Children (under 12):",
+    elderlyLabel: "Elderly (over 60):",
+    disabledLabel: "People with Disabilities:",
+    sphereWaterLabel: "Sphere Required Water / Day:",
+    sphereToiletsLabel: "Sphere Required Latrines:",
+    sphereDistanceLabel: "Mandatory Safety Clearance:",
+    designTypeLabel: "Layout Type & Urban Architecture Model:",
+    designTypeCamp: "Emergency Rapid Field Camp",
+    designTypeSmartCity: "Temporary Smart City Generator",
     disasterOptions: [
       "Earthquake",
       "Flood",

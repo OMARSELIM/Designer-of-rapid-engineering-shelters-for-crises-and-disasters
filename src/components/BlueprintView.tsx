@@ -665,6 +665,30 @@ export default function BlueprintView({ blueprints, unitDimensions, foundationTy
               } else if (fac.type === "space") {
                 color = "#10b981"; 
                 fill = "rgba(16, 185, 129, 0.15)";
+              } else if (fac.type === "neighborhood") {
+                color = "#8b5cf6"; 
+                fill = "rgba(139, 92, 246, 0.2)";
+              } else if (fac.type === "road_hub") {
+                color = "#94a3b8"; 
+                fill = "rgba(148, 163, 184, 0.25)";
+              } else if (fac.type === "green_zone") {
+                color = "#10b981"; 
+                fill = "rgba(16, 185, 129, 0.25)";
+              } else if (fac.type === "market") {
+                color = "#d946ef"; 
+                fill = "rgba(217, 70, 239, 0.2)";
+              } else if (fac.type === "hospital") {
+                color = "#f43f5e"; 
+                fill = "rgba(244, 63, 94, 0.3)";
+              } else if (fac.type === "traffic_control") {
+                color = "#06b6d4"; 
+                fill = "rgba(6, 182, 212, 0.2)";
+              } else if (fac.type === "expansion_zone") {
+                color = "#6366f1"; 
+                fill = "rgba(99, 102, 241, 0.1)";
+              } else if (fac.type === "utility_hub") {
+                color = "#f59e0b"; 
+                fill = "rgba(245, 158, 11, 0.3)";
               }
 
               const isSelected = selectedElement === `camp-${idx}`;

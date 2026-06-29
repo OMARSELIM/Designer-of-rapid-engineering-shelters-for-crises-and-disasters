@@ -7,6 +7,10 @@ export interface ProjectInput {
   climateType: string;
   localMaterials: string[];
   durationOfUse: string;
+  childrenCount?: number;
+  elderlyCount?: number;
+  disabledCount?: number;
+  designType?: 'camp' | 'smart_city';
 }
 
 export interface RoomItem {
@@ -24,7 +28,7 @@ export interface CampFacility {
   y: number;
   w: number;
   h: number;
-  type: 'shelter' | 'water' | 'medical' | 'latrines' | 'admin' | 'space';
+  type: 'shelter' | 'water' | 'medical' | 'latrines' | 'admin' | 'space' | 'solar' | 'fire' | 'waste' | 'school' | 'nutrition' | 'support' | 'neighborhood' | 'road_hub' | 'green_zone' | 'market' | 'hospital' | 'traffic_control' | 'expansion_zone' | 'utility_hub';
 }
 
 export interface FloorPlanData {
