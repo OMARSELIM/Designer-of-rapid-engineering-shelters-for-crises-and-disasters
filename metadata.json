@@ -1,0 +1,6 @@
+{
+  "name": "Rapid Shelter Designer",
+  "description": "برنامج ذكي لتصميم الملاجئ والمباني السريعة في مناطق الكوارث الطبيعية مع توفير مخططات هندسية، جدول كميات ومواد، خطة تنفيذ تفصيلية وميزانية تقديرية.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
