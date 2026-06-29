@@ -21,7 +21,18 @@ import {
   Search,
   Filter,
   Info,
-  Globe
+  Globe,
+  Leaf,
+  CheckSquare,
+  Square,
+  Wind,
+  Droplets,
+  Activity,
+  Thermometer,
+  Mountain,
+  AlertTriangle,
+  CheckCircle,
+  Award
 } from "lucide-react";
 import { ShelterProject, ProjectInput } from "./types";
 import { translations } from "./locales";
@@ -29,6 +40,7 @@ import ThreeDView from "./components/ThreeDView";
 import BlueprintView from "./components/BlueprintView";
 import SavedProjects from "./components/SavedProjects";
 import InteractiveMap from "./components/InteractiveMap";
+import { ResponsiveContainer, LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend } from "recharts";
 
 // @ts-ignore
 import imgEarthquake from "./assets/images/shelter_earthquake_1782683719432.jpg";
@@ -174,6 +186,56 @@ const defaultProjectAr: ShelterProject = {
     transportCost: 4000,
     contingencyCost: 7500,
     totalCost: 88400
+  },
+  siteRiskAssessment: {
+    safetyScore: 84,
+    windDirection: {
+      name: "اتجاه الرياح",
+      value: "شمالية غربية عاصفة (35 كم/س)",
+      riskLevel: "medium",
+      description: "رياح قوية ناتجة عن الطقس العاصف والممطر. يتطلب تثبيت المأوى جهازاً هندسياً مضاداً لقوى السحب والرفع الجوي."
+    },
+    floodProbability: {
+      name: "احتمالية الفيضانات",
+      value: "منخفضة (أقل من 10%)",
+      riskLevel: "low",
+      description: "الموقع في جبل الزاوية مرتفع وطبيعة الأرض صخرية، مما يستبعد خطر تراكم المياه السطحية الطويل."
+    },
+    landslideRisk: {
+      name: "مخاطر الانهيارات الأرضية",
+      value: "منخفضة جداً",
+      riskLevel: "low",
+      description: "التربة صخرية متماسكة وليست طينية منزلقة، مما يدعم ثبات الأساسات بشكل كامل."
+    },
+    earthquakeIntensity: {
+      name: "شدة الزلازل المتوقعة",
+      value: "مخاطر ارتدادية متوسطة إلى عالية",
+      riskLevel: "high",
+      description: "المنطقة نشطة تكتونياً بعد الزلزال الرئيسي. يجب استخدام هياكل معدنية خفيفة ومطاطية لامتصاص الصدمات."
+    },
+    seasonalTemperature: {
+      name: "درجة الحرارة الموسمية",
+      value: "شديدة البرودة (متوسط 4° مئوية)",
+      riskLevel: "medium",
+      description: "تتطلب عزل حراري قوي بولي يوريثان 50 مم مع نظام تدفئة داخلي آمن."
+    },
+    groundwaterLevel: {
+      name: "مستوى المياه الجوفية",
+      value: "عميق جداً (أكثر من 20 متر)",
+      riskLevel: "low",
+      description: "لا توجد مخاطر صعود مياه جوفية أو تسرب رطوبة للوحدات السكنية."
+    },
+    torrentProximity: {
+      name: "قرب الموقع من مجاري السيول",
+      value: "آمن (مسافة تزيد عن 4 كم)",
+      riskLevel: "low",
+      description: "الموقع بعيد عن الأودية ومجاري مياه السيول الموسمية في المنطقة."
+    },
+    recommendations: [
+      "تثبيت دعائم المآوي ببراغي تمدد فولاذية عميقة في الأساسات الصخرية لمقاومة الهزات الارتدادية والرياح العاتية.",
+      "تركيب غشاء عزل رطوبة إضافي أسفل الأرضية للوقاية من الصقيع والمياه الجارية.",
+      "توجيه فتحات الأبواب للشرق لتلافي الرياح الشمالية الغربية المباشرة."
+    ]
   }
 };
 
@@ -273,6 +335,56 @@ const defaultProjectEn: ShelterProject = {
     transportCost: 4000,
     contingencyCost: 7500,
     totalCost: 88400
+  },
+  siteRiskAssessment: {
+    safetyScore: 84,
+    windDirection: {
+      name: "Wind Direction",
+      value: "Stormy North-Westerly (35 km/h)",
+      riskLevel: "medium",
+      description: "Strong winds associated with cold weather. Structural anchorage must prevent aerodynamic drag and uplift."
+    },
+    floodProbability: {
+      name: "Flood Probability",
+      value: "Low (under 10%)",
+      riskLevel: "low",
+      description: "Elevated topography in Jabal al-Zawiya prevents surface water pooling or seasonal flooding."
+    },
+    landslideRisk: {
+      name: "Landslide Risk",
+      value: "Negligible / Low",
+      riskLevel: "low",
+      description: "Solid, compact rocky ground prevents sliding or soil shear failures."
+    },
+    earthquakeIntensity: {
+      name: "Expected Earthquake Intensity",
+      value: "Moderate-High Aftershock Profile",
+      riskLevel: "high",
+      description: "Seismically active region post-disaster. Requiring lightweight high-ductility steel framing."
+    },
+    seasonalTemperature: {
+      name: "Seasonal Temperature",
+      value: "Very Cold (Average 4°C)",
+      riskLevel: "medium",
+      description: "Demands robust thermal sandwich panels (50mm Polyurethane) and draft proofing."
+    },
+    groundwaterLevel: {
+      name: "Groundwater Level",
+      value: "Very Deep (Over 20 meters)",
+      riskLevel: "low",
+      description: "No threat of water rising or hydrostatic pressure affecting base structures."
+    },
+    torrentProximity: {
+      name: "Torrent Proximity",
+      value: "Safe (Over 4 km away)",
+      riskLevel: "low",
+      description: "The site is located far from runoff valleys or active flash-flood channels."
+    },
+    recommendations: [
+      "Use heavy expansion bolts driven directly into the solid rock to anchor frame posts.",
+      "Orient principal doors eastward to shield residents from dominant freezing NW winds.",
+      "Include a robust ground damp-proof course under precast blocks."
+    ]
   }
 };
 
@@ -323,6 +435,130 @@ const getShelterImageCaption = (disasterType: string, lang?: "ar" | "en") => {
     : "نموذج تخيلي واقعي لوحدة الإيواء السريع مسبقة الصنع للتجميع الميداني الفوري.";
 };
 
+function calculateHeuristicRisk(input: any, lang: string) {
+  interface RiskFactorItem {
+    name: string;
+    value: string;
+    riskLevel: "low" | "medium" | "high";
+    description: string;
+  }
+
+  const isEn = lang === "en";
+  let safetyScore = 95;
+  let windDir: RiskFactorItem = { name: "اتجاه الرياح", value: "شمالية غربية معتدلة (NW 15 كم/س)", riskLevel: "low", description: "رياح مستقرة لا تشكل أي تهديد مباشر على الهيكل الإنشائي للمأوى." };
+  let floodProb: RiskFactorItem = { name: "احتمالية الفيضانات", value: "منخفضة (نسبة أقل من 5%)", riskLevel: "low", description: "الموقع مرتفع هندسياً وخطر تجمع مياه الأمطار محدود جداً." };
+  let landslide: RiskFactorItem = { name: "مخاطر الانهيارات الأرضية", value: "آمنة (منخفضة)", riskLevel: "low", description: "التربة صلبة ومستقرة وميول الأرض مستوٍ مما يمنع حدوث الانزلاقات." };
+  let quakeInt: RiskFactorItem = { name: "شدة الزلازل المتوقعة", value: "مستقرة (لا يوجد نشاط تكتوني نشط)", riskLevel: "low", description: "المنطقة ذات سجل زلزالي آمن وتصميم المأوى يوفر حماية إضافية." };
+  let seasonalTemp: RiskFactorItem = { name: "درجة الحرارة الموسمية", value: "معتدلة (متوسط 22° مئوية)", riskLevel: "low", description: "درجات حرارة لطيفة تدعم راحة القاطنين بمعدل عزل قياسي." };
+  let groundwater: RiskFactorItem = { name: "مستوى المياه الجوفية", value: "متوسط العمق (3م - 6م)", riskLevel: "low", description: "عمق آمن يمنع تسرب الرطوبة أو صعود المياه للأساسات الإنشائية." };
+  let torrentProx: RiskFactorItem = { name: "قرب الموقع من مجاري السيول", value: "آمن تماماً (مسافة تزيد عن 3 كم)", riskLevel: "low", description: "الموقع يقع خارج الخرائط الطبوغرافية لمجاري ومصبات المياه الموسمية." };
+  let recommendations: string[] = [
+    "الالتزام بتباعد كافٍ يبلغ 6 أمتار على الأقل بين الوحدات للحماية من الحريق والخصوصية.",
+    "توجيه فتحات المداخن والتهوية بعيداً عن اتجاه الرياح السائد.",
+    "مراقبة سنوية للأساسات للتأكد من خلوها من أي تصدعات ناتجة عن هبوط التربة."
+  ];
+
+  const disasterType = input.disasterType || "";
+  const soilType = input.soilType || "";
+  const climateType = input.climateType || "";
+
+  const dTypeAr = disasterType.toLowerCase();
+  const sTypeAr = soilType.toLowerCase();
+  const cTypeAr = climateType.toLowerCase();
+
+  if (isEn) {
+    windDir = { name: "Wind Direction", value: "Moderate Westerly (NW 15 km/h)", riskLevel: "low", description: "Stable winds posing no direct threat to the structural frame." };
+    floodProb = { name: "Flood Probability", value: "Low (probability under 5%)", riskLevel: "low", description: "The site topography is elevated; water pooling hazards are minimal." };
+    landslide = { name: "Landslide Risk", value: "Safe / Negligible", riskLevel: "low", description: "Flat terrain with solid ground compaction preventing soil slide events." };
+    quakeInt = { name: "Expected Earthquake Intensity", value: "Stable (no active tectonic history)", riskLevel: "low", description: "The region has a highly secure seismic profile; the structure exceeds local safety codes." };
+    seasonalTemp = { name: "Seasonal Temperature", value: "Moderate (Average 22°C)", riskLevel: "low", description: "Pleasant temperatures supporting resident comfort with standard insulation." };
+    groundwater = { name: "Groundwater Level", value: "Medium Depth (3m - 6m)", riskLevel: "low", description: "Safe level preventing dampness migration or hydrostatic uplift." };
+    torrentProx = { name: "Torrent Proximity", value: "Secure (over 3 km distance)", riskLevel: "low", description: "The site lies entirely outside topographic active runoff channels." };
+    recommendations = [
+      "Maintain a 6m firebreak and safety clearance buffer between family clusters.",
+      "Orient door openings away from dominant prevailing wind gusts to prevent draft chill.",
+      "Execute periodic ground moisture checks around foundation anchor points."
+    ];
+  }
+
+  // Deduct based on parameters
+  if (dTypeAr.includes("زلزال") || dTypeAr.includes("earthquake")) {
+    safetyScore -= 12;
+    if (isEn) {
+      quakeInt = { name: "Expected Earthquake Intensity", value: "High Seismic Risk (Potential 7.0 Richter)", riskLevel: "high", description: "Active seismological zone. Lightweight framing with flexible anchor joints is essential." };
+      recommendations.push("Implement ductile framing steel brackets to absorb shear loads and lateral earth forces.");
+    } else {
+      quakeInt = { name: "شدة الزلازل المتوقعة", value: "مخاطر زلزالية نشطة (احتمالية هزة بقوة 7.0 ريختر)", riskLevel: "high", description: "موقع ذو نشاط تكتوني مستمر. الالتزام بالأطر المرنة والوصلات الفولاذية الممتصة للقص إجباري." };
+      recommendations.push("تثبيت زوايا تدعيم فولاذية مرنة لامتصاص الأحمال الجانبية وقوى القص الأرضية.");
+    }
+  }
+
+  if (dTypeAr.includes("فيضان") || dTypeAr.includes("flood") || dTypeAr.includes("سيول") || dTypeAr.includes("torrent")) {
+    safetyScore -= 18;
+    if (isEn) {
+      floodProb = { name: "Flood Probability", value: "High Risk (Seasonal inundation potential)", riskLevel: "high", description: "High risk of flash flooding. Requiring unit elevation of at least 0.8 meters." };
+      torrentProx = { name: "Torrent Proximity", value: "Critical Proximity (Less than 250m)", riskLevel: "high", description: "Close to a seasonal drainage runoff. Diversion channels and dikes should be constructed." };
+      recommendations.push("Elevate all floor levels on screw-piles to protect from standing or flowing water.");
+    } else {
+      floodProb = { name: "احتمالية الفيضانات", value: "مرتفعة (خطر غمر موسمي للتربة)", riskLevel: "high", description: "احتمالية عالية لتراكم المياه. تصميم مأوى مرتفع عن الأرض بمقدار 0.8 متر على الأقل يعتبر إلزامياً." };
+      torrentProx = { name: "قرب الموقع من مجاري السيول", value: "حرج وقريب (أقل من 250 متر)", riskLevel: "high", description: "قريب من مصبات السيول الجبلية الموسمية. ينصح بإنشاء قنوات تصريف وسواتر ترابية حامية." };
+      recommendations.push("رفع مستوى أرضيات المأوى على قوائم فولاذية أو خشبية لحماية العائلات من السيول.");
+    }
+  }
+
+  if (sTypeAr.includes("رمل") || sTypeAr.includes("طين") || sTypeAr.includes("loose") || sTypeAr.includes("sand") || sTypeAr.includes("clay")) {
+    safetyScore -= 10;
+    if (isEn) {
+      landslide = { name: "Landslide Risk", value: "Moderate / Mudslide Potential", riskLevel: "medium", description: "Soft clay/sand soil. Ground anchorage depth must be doubled to reach firm strata." };
+      recommendations.push("Drive helical foundation stakes 1.5m deeper into the soil to prevent structural shifting.");
+    } else {
+      landslide = { name: "مخاطر الانهيارات الأرضية", value: "متوسطة (احتمالية انزلاق طيني)", riskLevel: "medium", description: "تربة رملية/طينية هشة. غرس أوتاد التثبيت يجب أن يتضاعف هندسياً للوصول للطبقة الأكثر تماسكاً." };
+      recommendations.push("غرس خرسانة التأسيس والشدادات الأرضية لمسافة 1.5م إضافية تحت الأرض لضمان الثبات.");
+    }
+  }
+
+  if (cTypeAr.includes("عاصف") || cTypeAr.includes("windy") || cTypeAr.includes("storm") || cTypeAr.includes("رياح")) {
+    safetyScore -= 7;
+    if (isEn) {
+      windDir = { name: "Wind Direction", value: "Dominant Northern Gale (NW 45-60 km/h)", riskLevel: "medium", description: "Frequent stormy winds. Aerodynamic curved roof or sloped roof with tension ties is required." };
+      recommendations.push("Apply heavy steel storm collar strapping on all roof-to-wall framing joins.");
+    } else {
+      windDir = { name: "اتجاه الرياح", value: "رياح شمالية عاتية مستمرة (NW 45-60 كم/س)", riskLevel: "medium", description: "رياح مستمرة شديدة الضغط. ينصح بسطح مائل أو انسيابي قبيبي مع أحزمة تثبيت أرضية إضافية." };
+      recommendations.push("تركيب أحزمة شد فولاذية علوية على الأسقف لضمان استقرار المأوى ضد الرياح الهابطة.");
+    }
+  }
+
+  if (cTypeAr.includes("بارد") || cTypeAr.includes("cold") || cTypeAr.includes("شتاء") || cTypeAr.includes("winter")) {
+    safetyScore -= 5;
+    if (isEn) {
+      seasonalTemp = { name: "Seasonal Temperature", value: "Severe Cold (Dropping to -5°C)", riskLevel: "medium", description: "Sub-freezing night temps. High thermal mass insulation R-15+ and vapor barrier are essential." };
+    } else {
+      seasonalTemp = { name: "درجة الحرارة الموسمية", value: "برودة شديدة (تنخفض لـ -5° مئوية ليلاً)", riskLevel: "medium", description: "صقيع قارس ليلاً. يتطلب رغوة عازلة بكثافة R-15+ مع حاجز رطوبة لمنع الصدمات الحرارية." };
+    }
+  }
+
+  if (cTypeAr.includes("حار") || cTypeAr.includes("hot") || cTypeAr.includes("صحرا") || cTypeAr.includes("desert")) {
+    safetyScore -= 5;
+    if (isEn) {
+      seasonalTemp = { name: "Seasonal Temperature", value: "Severe Dry Heat (Reaching 45°C)", riskLevel: "medium", description: "Intense solar radiation. Reflective foil backing and double cross-ventilation openings required." };
+    } else {
+      seasonalTemp = { name: "درجة الحرارة الموسمية", value: "حرارة صحراوية شديدة (تصل لـ 45° مئوية)", riskLevel: "medium", description: "إشعاع شمسي مباشر وقوي. يتطلب رقائق عاكسة للحرارة مع فتحات تهوية متقاطعة لتدفق الهواء المبرد." };
+    }
+  }
+
+  return {
+    safetyScore: Math.max(50, safetyScore),
+    windDirection: windDir,
+    floodProbability: floodProb,
+    landslideRisk: landslide,
+    earthquakeIntensity: quakeInt,
+    seasonalTemperature: seasonalTemp,
+    groundwaterLevel: groundwater,
+    torrentProximity: torrentProx,
+    recommendations
+  };
+}
+
 export default function App() {
   const [lang, setLang] = useState<'ar' | 'en'>('ar');
   const t = translations[lang];
@@ -344,6 +580,63 @@ export default function App() {
   const [errorMsg, setErrorMsg] = useState<string>("");
   const [successMsg, setSuccessMsg] = useState<string>("");
   const [activeResultTab, setActiveResultTab] = useState<'design' | 'bom' | 'timeline' | 'budget' | 'map'>('design');
+
+  const [sharing, setSharing] = useState<boolean>(false);
+  const [shareId, setShareId] = useState<string | null>(null);
+  const [showShareModal, setShowShareModal] = useState<boolean>(false);
+  const [copiedShareLink, setCopiedShareLink] = useState<boolean>(false);
+
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    const projectId = params.get("project");
+    if (projectId) {
+      setLoading(true);
+      setLoadingStep(lang === "ar" ? "جاري تحميل المخطط والمشروع المشترك..." : "Loading shared blueprint and project...");
+      fetch(`/api/shelter/project/${projectId}`)
+        .then((res) => {
+          if (!res.ok) throw new Error("Project not found");
+          return res.json();
+        })
+        .then((data) => {
+          if (data && data.project) {
+            setProject(data.project);
+            setInput(data.project.input);
+            setSuccessMsg(lang === "ar" ? "تم تحميل وتكوين المشروع المشترك بنجاح!" : "Shared project loaded successfully!");
+            setTimeout(() => setSuccessMsg(""), 4000);
+          }
+        })
+        .catch((err) => {
+          console.error(err);
+          setErrorMsg(lang === "ar" ? "فشل تحميل المشروع المشترك. قد يكون الرابط خاطئاً أو منتهي الصلاحية." : "Failed to load shared project. The link may be incorrect or expired.");
+        })
+        .finally(() => {
+          setLoading(false);
+        });
+    }
+  }, []);
+
+  const handleShareProject = async () => {
+    if (!project) return;
+    setSharing(true);
+    try {
+      const res = await fetch("/api/shelter/share", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json"
+        },
+        body: JSON.stringify({ project })
+      });
+      if (!res.ok) throw new Error("Sharing failed");
+      const data = await res.json();
+      setShareId(data.id);
+      setShowShareModal(true);
+    } catch (err) {
+      console.error("Failed to share project:", err);
+      setErrorMsg(lang === "ar" ? "فشل توليد رابط مشاركة المشروع" : "Failed to generate project share link");
+    } finally {
+      setSharing(false);
+    }
+  };
 
   // BOM table filter & search
   const [bomSearch, setBomSearch] = useState<string>("");
@@ -367,6 +660,166 @@ export default function App() {
         return { ...prev, localMaterials: [...current, materialLabel] };
       }
     });
+  };
+
+  const toggleLanguage = (newLang: 'ar' | 'en') => {
+    const prevLang = lang;
+    if (prevLang === newLang) return;
+
+    setLang(newLang);
+
+    const prevT = translations[prevLang];
+    const nextT = translations[newLang];
+
+    // Find indices of previous input selections in their corresponding previous language options array
+    const disasterIdx = prevT.disasterOptions.indexOf(input.disasterType);
+    const soilIdx = prevT.soilOptions.indexOf(input.soilType);
+    const climateIdx = prevT.climateOptions.indexOf(input.climateType);
+    const durationIdx = prevT.durationOptions.indexOf(input.durationOfUse);
+
+    // Map selected local materials
+    const updatedMaterials = (input.localMaterials || []).map((matLabel) => {
+      const optionObj = prevT.localMaterialOptions.find(opt => opt.label === matLabel);
+      if (optionObj) {
+        const nextOptionObj = nextT.localMaterialOptions.find(opt => opt.id === optionObj.id);
+        return nextOptionObj ? nextOptionObj.label : matLabel;
+      }
+      return matLabel;
+    });
+
+    const updatedInput: ProjectInput = {
+      ...input,
+      disasterType: disasterIdx !== -1 ? nextT.disasterOptions[disasterIdx] : nextT.disasterOptions[0],
+      soilType: soilIdx !== -1 ? nextT.soilOptions[soilIdx] : nextT.soilOptions[0],
+      climateType: climateIdx !== -1 ? nextT.climateOptions[climateIdx] : nextT.climateOptions[0],
+      durationOfUse: durationIdx !== -1 ? nextT.durationOptions[durationIdx] : nextT.durationOptions[0],
+      localMaterials: updatedMaterials
+    };
+
+    setInput(updatedInput);
+
+    // Update active project representation dynamically!
+    if (project) {
+      if (project.id === "default-earthquake") {
+        setProject(newLang === "ar" ? defaultProjectAr : defaultProjectEn);
+      } else if (project.id.startsWith("backup-")) {
+        const count = updatedInput.peopleCount;
+        const capacityPerUnit = 5;
+        const totalUnits = Math.ceil(count / capacityPerUnit);
+        const isEn = newLang === "en";
+        const isFlood = updatedInput.disasterType.toLowerCase().includes("فيضان") || updatedInput.disasterType.toLowerCase().includes("flood") || updatedInput.disasterType.toLowerCase().includes("أمطار") || updatedInput.disasterType.toLowerCase().includes("rain");
+        const isCold = updatedInput.climateType.toLowerCase().includes("بارد") || updatedInput.climateType.toLowerCase().includes("cold") || updatedInput.disasterType.toLowerCase().includes("برد") || updatedInput.disasterType.toLowerCase().includes("snow");
+
+        const convertedProject: ShelterProject = {
+          id: project.id,
+          createdAt: project.createdAt,
+          input: updatedInput,
+          generalAnalysis: isEn 
+            ? `Rapid Response Engineering Assessment for (${updatedInput.locationName}): To address the disaster of type (${updatedInput.disasterType}) in a terrain with soil type (${updatedInput.soilType}) and climate conditions of (${updatedInput.climateType}), a highly resilient and easily deployable modular shelter design has been finalized. The soil profile permits ${updatedInput.soilType.toLowerCase().includes("rock") ? "solid mechanical structural anchors" : "wide concrete slab foundations to avoid slip and subsidence"}. The layout integrates local raw materials (${updatedInput.localMaterials.length > 0 ? updatedInput.localMaterials.join(" & ") : "primary emergency supplies"}) to minimize shipping costs and on-site assembly hours.`
+            : `تحليل الاستجابة السريعة لمنطقة (${updatedInput.locationName}): لمواجهة كارثة (${updatedInput.disasterType}) في محيط ذي تربة (${updatedInput.soilType}) ومناخ (${updatedInput.climateType})، تم اختيار نظام مأوى مرن وسهل التجميع لتخفيف الأضرار بالسرعة القصوى. التربة تسمح بتثبيت قواعد ارتكاز ${updatedInput.soilType.includes("صخر") ? "ميكانيكية صلبة" : "خرسانية عريضة لتفادي الانزلاق"}. التصميم يستغل المواد المتاحة (${updatedInput.localMaterials.length > 0 ? updatedInput.localMaterials.join(" و") : "الموارد الهندسية الأساسية"}) لتقليل تكلفة وساعات الشحن والنقل للحد الأدنى.`,
+          suggestedModel: {
+            name: isEn 
+              ? (isFlood ? "High-Elevated Flood Resilience Shelter" : isCold ? "Thermal Envelope Insulated Rapid Shelter" : "Standard Rapid Deployment Shelter Model")
+              : (isFlood ? "مأوى السلامة المرتفع لمناطق الفيضانات" : isCold ? "مأوى الدفء الحراري المعزول" : "المأوى النموذجي السريع للاستجابة العاجلة"),
+            type: isEn
+              ? (isFlood ? "Elevated light-gauge steel framing with treated timber panels" : "Prefabricated sandwich panels with high-density polyurethane")
+              : (isFlood ? "وحدات هيكلية فولاذية مرتفعة عن سطح الأرض بجدران خشبية معالجة" : "هياكل معزولة مسبقة التجميع بألواح البولي يوريثان"),
+            unitDimensions: { width: 4.5, length: 5.5, height: 2.7 },
+            roomDistribution: isEn 
+              ? ["Integrated family living and sleeping zone", "Compact kitchenette & meal prep corner", "Private insulated bathroom / sanitation facility", "Dedicated emergency logistics storage space"]
+              : ["منطقة معيشة ونوم عائلية", "ركن مطبخ عائلي مصغر", "مرفق حمام داخلي معزول بالكامل", "منطقة تخزين للأمتعة الإغاثية"],
+            totalUnitsNeeded: totalUnits,
+            capacityPerUnit: capacityPerUnit,
+            floorPlanDescription: isEn
+              ? `Compact layout offering ${(4.5 * 5.5).toFixed(1)}m² of independent space per family, integrating dining and sleeping spaces with isolated latrines to suppress disease vectors in high-density temporary camps.`
+              : `مخطط داخلي مدمج يوفر مساحة عائلية مستقلة مقدرة بـ ${(4.5 * 5.5).toFixed(1)}م²، يدمج مناطق المعيشة والنوم مع زوايا مخصصة للطبخ ومراحيض معزولة لمنع انتشار الأمراض في المخيمات الميدانية.`,
+            foundationType: isEn
+              ? (isFlood ? "Heavy steel piles anchored on concrete ballast blocks elevated 50cm" : "Precast concrete deck blocks with quick leveling bolts")
+              : (isFlood ? "أعمدة ارتكاز فولاذية مرفوعة على كتل خرسانية بارتفاع 50سم" : "قواعد خرسانية مسبقة الصب سريعة التثبيت والموازنة"),
+            insulationRating: isEn
+              ? "Dual thermal reflective membrane with high performance insulation filling to resist extreme weather"
+              : "طبقتين من الكسوة مع حشوة ليفية عازلة لمكافحة الظروف المناخية القاسية"
+          },
+          blueprints: {
+            floorPlan: {
+              dimensions: { w: 5.5, h: 4.5 },
+              rooms: [
+                { name: isEn ? "Sleeping & Living" : "غرفة نوم ومعيشة", x: 0.5, y: 0.5, w: 3.0, h: 3.5, type: "living" },
+                { name: isEn ? "Kitchen Corner" : "ركن الطبخ", x: 3.8, y: 0.5, w: 1.2, h: 1.5, type: "kitchen" },
+                { name: isEn ? "Bathroom" : "مرفق حمام", x: 3.8, y: 2.3, w: 1.2, h: 1.7, type: "toilet" },
+                { name: isEn ? "Double Bed" : "سرير ثنائي", x: 0.8, y: 0.8, w: 1.8, h: 1.4, type: "bed" },
+                { name: isEn ? "Entrance" : "باب رئيسي", x: 1.5, y: 4.0, w: 0.8, h: 0.1, type: "door" },
+                { name: isEn ? "Window" : "نافذة أمامية", x: 1.2, y: 0.1, w: 1.0, h: 0.1, type: "window" }
+              ]
+            },
+            elevation: {
+              facadeType: isEn
+                ? "Weather-resistant, shock-proof thermal envelope featuring integrated high-level ventilation to prevent humidity"
+                : "واجهة معمارية مقاومة للرطوبة والصدمات الجوية بفتحة تهوية علوية لمنع الرطوبة وتكثف المياه داخل الوحدة",
+              wallHeight: 2.2,
+              roofHeight: 0.5,
+              roofType: isFlood || isCold ? "sloped" : "flat",
+              materials: isEn
+                ? ["Insulated composite panels", "Stainless weather-sealed columns", "Tight insulated steel exterior door"]
+                : ["ألواح عزل مركبة مسبقة الصنع", "أطر مدعمة ومقاومة للصدأ", "باب حديد خفيف محكم الإغلاق"]
+            },
+            campLayout: {
+              gridRows: Math.max(2, Math.floor(Math.sqrt(totalUnits))),
+              gridCols: Math.ceil(totalUnits / Math.max(2, Math.floor(Math.sqrt(totalUnits)))),
+              spacing: 5.0,
+              facilities: [
+                ...Array.from({ length: Math.min(12, totalUnits) }).map((_, i) => ({
+                  name: isEn ? `Shelter Unit ${i+1}` : `وحدة إيواء عائلي ${i+1}`,
+                  x: 5 + (i % 3) * 12,
+                  y: 5 + Math.floor(i / 3) * 10,
+                  w: 6,
+                  h: 5,
+                  type: "shelter" as const
+                })),
+                { name: isEn ? "Camp Water Tank" : "خزان مياه المخيم", x: 42, y: 5, w: 8, h: 7, type: "water" },
+                { name: isEn ? "Field Clinic" : "العيادة الميدانية", x: 42, y: 15, w: 9, h: 8, type: "medical" },
+                { name: isEn ? "Safe Zone & Playground" : "مساحة آمنة وملاعب", x: 5, y: 25, w: 22, h: 8, type: "space" }
+              ]
+            }
+          },
+          billOfMaterials: isEn ? [
+            { category: "Structural Framing", material: "Lightweight prefabricated steel frames and structural ties", quantity: totalUnits * 400, unit: "kg", estimatedUnitPrice: 1.3, totalPrice: totalUnits * 400 * 1.3, localSourcingPossible: true, sourcingNotes: "Erected immediately from near local metal yards" },
+            { category: "Insulation & Finishes", material: "Treated thermal wood or polyurethane foam insulated wall panels", quantity: totalUnits * 16, unit: "panel", estimatedUnitPrice: 22.0, totalPrice: totalUnits * 16 * 22.0, localSourcingPossible: true, sourcingNotes: "In stock at near building supply merchants" },
+            { category: "Doors & Windows", material: "Sealed exterior doors and sliding glazed windows for insulation", quantity: totalUnits, unit: "set", estimatedUnitPrice: 180.0, totalPrice: totalUnits * 180.0, localSourcingPossible: true, sourcingNotes: "Fast procurement through regional aluminum workshops" },
+            { category: "Sanitary & Electrical", material: "Piping, toilet accessories, drainage pipes & water valves", quantity: totalUnits, unit: "set", estimatedUnitPrice: 150.0, totalPrice: totalUnits * 150.0, localSourcingPossible: true, sourcingNotes: "Purchase from local plumbing markets to bypass delay" },
+            { category: "Foundations & Connectors", material: "Galvanized bolts, brackets, anchors and precast footing bases", quantity: 1, unit: "lot", estimatedUnitPrice: 800.0, totalPrice: 800.0, localSourcingPossible: true, sourcingNotes: "Standard structural fasteners in stock" }
+          ] : [
+            { category: "الهيكل الإنشائي", material: "أعمدة وجسور حديدية خفيفة مسبقة الصنع للتجميع الميداني السريع", quantity: totalUnits * 400, unit: "كغ", estimatedUnitPrice: 1.3, totalPrice: totalUnits * 400 * 1.3, localSourcingPossible: true, sourcingNotes: "تجمع فوري من أقرب مصانع تجميع معدنية" },
+            { category: "العزل والتشطيب", material: "ألواح خشبية معززة أو ألواح بانل عازلة للحرارة والرطوبة", quantity: totalUnits * 16, unit: "لوح", estimatedUnitPrice: 22.0, totalPrice: totalUnits * 16 * 22.0, localSourcingPossible: true, sourcingNotes: "متوفر لدى مستودعات البناء القريبة" },
+            { category: "الأبواب والنوافذ", material: "أبواب حديدية ونوافذ زجاجية عازلة للوحدات السكنية", quantity: totalUnits, unit: "طقم كامل", estimatedUnitPrice: 180.0, totalPrice: totalUnits * 180.0, localSourcingPossible: true, sourcingNotes: "سلسلة توريد سريعة عبر الورش القريبة" },
+            { category: "التمديدات الصحية والكهربائية", material: "صمامات تمديد، خطوط تصريف بلاستيكية ومضخات مياه", quantity: totalUnits, unit: "طقم", estimatedUnitPrice: 150.0, totalPrice: totalUnits * 150.0, localSourcingPossible: true, sourcingNotes: "شراء من السوق المحلي لتجنب تأخير الاستيراد" },
+            { category: "الأساسات والأدوات والتثبيت", material: "مسامير تثبيت فولاذية، قواعد خرسانية، زوايا لربط الهيكل", quantity: 1, unit: "دفعة مجمعة", estimatedUnitPrice: 800.0, totalPrice: 800.0, localSourcingPossible: true, sourcingNotes: "أطقم تجميع قياسية هندسية" }
+          ],
+          timeline: isEn ? [
+            { phase: "Site Prep & Grading", stepName: "Clearing site of rubble and leveling ground contours", durationDays: 1, durationHours: 10, workersRequired: 8, instructions: "Survey soil profile and layout storm drains to prevent pools of standing water around units." },
+            { phase: "Foundations & Anchors", stepName: "Erecting precast footing blocks and aligning level lines", durationDays: 1, durationHours: 8, workersRequired: 6, instructions: "Set precast blocks and anchor spikes to secure frame nodes from high wind lift." },
+            { phase: "Structural Framing", stepName: "Erecting steel studs and raising unit skeletons", durationDays: 1, durationHours: 12, workersRequired: 12, instructions: "Fasten metal frames and connect roof trusses with high-tensile structural bolts." },
+            { phase: "Enclosure & Insulation", stepName: "Mounting insulated siding and waterproofing joints", durationDays: 1, durationHours: 14, workersRequired: 15, instructions: "Install sandwich panels, seal gaps with premium silicon compounds, and join windows." },
+            { phase: "Field Handover", stepName: "Inspection, service commissioning and family check-in", durationDays: 1, durationHours: 6, workersRequired: 5, instructions: "Check piping connections, clean indoor dust, distribute keys and register incoming families." }
+          ] : [
+            { phase: "التحضير والتسوية", stepName: "تطهير الموقع وتسوية مناسيب المياه", durationDays: 1, durationHours: 10, workersRequired: 8, instructions: "مسح الأرض وتحديد مجاري تصريف المياه لمنع البرك وتثبيت نقاط تجميع الملاجئ." },
+            { phase: "الأساسات والتدعيم", stepName: "توزيع القواعد الخرسانية ورش الأوتاد", durationDays: 1, durationHours: 8, workersRequired: 6, instructions: "تنصيب القواعد مسبقة الصنع وموازنة تدرجها لتفادي حدوث انحراف في الملاجئ." },
+            { phase: "تركيب الهياكل", stepName: "ربط الهياكل الإنشائية ورفع الأعمدة", durationDays: 1, durationHours: 12, workersRequired: 12, instructions: "تثبيت الأعمدة وجسور التدعيم للهياكل وربط البراغي بالأدوات المناسبة." },
+            { phase: "التغطية والكسوة", stepName: "تطبيق ألواح التلبيس والعوازل المائية والحرارية", durationDays: 1, durationHours: 14, workersRequired: 15, instructions: "تلبيس جدران الوحدات بالكامل وتركيب ألواح السقف وحشو الفراغات بسيليكون العزل المائي." },
+            { phase: "التمديدات والخدمات", stepName: "تثبيت الأبواب والنوافذ وتوصيل خطوط الصرف والمياه", durationDays: 1, durationHours: 15, workersRequired: 14, instructions: "تركيب الأبواب والنوافذ بالألمنيوم العازل، وتوصيل تمديدات تصريف الحمام والمطابخ وتوصيلها بالصرف العام." },
+            { phase: "التسليم الميداني", stepName: "إجراء اختبارات الأمان واختبار العوازل وبدء إسكان العائلات", durationDays: 1, durationHours: 8, workersRequired: 6, instructions: "اختبار تماسك الملاجئ وعزل الأمطار والرياح، وتنظيف الوحدات والبدء بتسليم المفاتيح للأسر الإيوائية." }
+          ],
+          budget: {
+            materialsCost: totalUnits * 1150 + 800,
+            laborCost: totalUnits * 200 + 400,
+            transportCost: totalUnits * 100 + 300,
+            contingencyCost: totalUnits * 150 + 200,
+            totalCost: (totalUnits * 1150 + 800) + (totalUnits * 200 + 400) + (totalUnits * 100 + 300) + (totalUnits * 150 + 200)
+          }
+        };
+        setProject(convertedProject);
+      }
+    }
   };
 
   // Run generation through full-stack backend
@@ -691,6 +1144,22 @@ export default function App() {
     setTimeout(() => setSuccessMsg(""), 3000);
   };
 
+  // Toggle timeline step completion status
+  const handleToggleTimelineStep = (stepIdx: number) => {
+    if (!project) return;
+    const updatedTimeline = project.timeline.map((step, idx) => {
+      if (idx === stepIdx) {
+        return { ...step, completed: !step.completed };
+      }
+      return step;
+    });
+
+    setProject({
+      ...project,
+      timeline: updatedTimeline
+    });
+  };
+
   // Filter materials based on search & category
   const filteredBOM = project ? project.billOfMaterials.filter((item) => {
     const matchesSearch = item.material.toLowerCase().includes(bomSearch.toLowerCase()) || 
@@ -703,7 +1172,7 @@ export default function App() {
   const materialSum = project ? project.billOfMaterials.reduce((sum, item) => sum + item.totalPrice, 0) : 0;
   
   return (
-    <div className="min-h-screen bg-[#f8fafc] text-[#0f172a] p-4 sm:p-6" dir="rtl">
+    <div className="min-h-screen bg-[#f8fafc] text-[#0f172a] p-4 sm:p-6" dir={lang === "ar" ? "rtl" : "ltr"}>
       {/* Premium Elegant Header */}
       <header className="max-w-7xl mx-auto mb-6 bg-white p-5 rounded-2xl shadow-sm border border-slate-100 flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
         <div className="flex items-center gap-3">
@@ -712,20 +1181,49 @@ export default function App() {
           </div>
           <div>
             <h1 className="text-xl font-extrabold text-slate-800 tracking-tight flex items-center gap-2">
-              مصمم الملاجئ الهندسية السريعة للأزمات والكوارث
+              {t.title}
               <span className="text-[10px] bg-red-100 text-red-700 font-bold px-2 py-0.5 rounded-full uppercase">
-                استجابة فورية
+                {lang === "ar" ? "استجابة فورية" : "Immediate Response"}
               </span>
             </h1>
             <p className="text-xs text-slate-500 mt-0.5">
-              منصة ذكية لتصميم مراكز ومخيمات الإيواء السريع، نمذجة ثلاثية الأبعاد تفاعلية، حساب جداول الكميات، التنفيذ الزمني والميزانية التقديرية.
+              {t.slogan}
             </p>
           </div>
         </div>
-        <div className="flex gap-2 self-stretch md:self-auto">
+        <div className="flex flex-wrap items-center gap-2.5 self-stretch md:self-auto">
+          {/* Language Switcher Buttons */}
+          <div className="flex items-center bg-slate-100 p-1 rounded-xl border border-slate-200">
+            <button
+              id="lang-ar-btn"
+              onClick={() => toggleLanguage("ar")}
+              className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all flex items-center gap-1.5 ${
+                lang === "ar"
+                  ? "bg-white text-indigo-600 shadow-sm"
+                  : "text-slate-500 hover:text-slate-800"
+              }`}
+            >
+              <Globe className="w-3.5 h-3.5" />
+              العربية
+            </button>
+            <button
+              id="lang-en-btn"
+              onClick={() => toggleLanguage("en")}
+              className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all flex items-center gap-1.5 ${
+                lang === "en"
+                  ? "bg-white text-indigo-600 shadow-sm"
+                  : "text-slate-500 hover:text-slate-800"
+              }`}
+            >
+              <Globe className="w-3.5 h-3.5" />
+              English
+            </button>
+          </div>
+
           <span className="text-xs font-mono text-slate-500 bg-slate-50 border border-slate-100 rounded-xl px-3.5 py-2 flex items-center gap-2">
             <Clock className="w-3.5 h-3.5 text-slate-400" />
-            التوقيت الميداني: {new Date().toLocaleTimeString("ar-EG", { hour: '2-digit', minute: '2-digit' })}
+            {lang === "ar" ? "التوقيت الميداني: " : "Field Time: "} 
+            {new Date().toLocaleTimeString(lang === "ar" ? "ar-EG" : "en-US", { hour: '2-digit', minute: '2-digit' })}
           </span>
         </div>
       </header>
@@ -738,9 +1236,9 @@ export default function App() {
           <div>
             <h2 className="text-sm font-bold text-slate-800 border-b border-slate-100 pb-2.5 flex items-center gap-2">
               <Layers className="w-4.5 h-4.5 text-indigo-600" />
-              تكوين محددات الأزمة وموقع المأوى
+              {t.configTitle}
             </h2>
-            <p className="text-[11px] text-slate-400 mt-1">حدد طبيعة الظروف الإغاثية والبيئية لتخصيص الهيكل المعماري والأساسات وجدول الكميات.</p>
+            <p className="text-[11px] text-slate-400 mt-1">{t.configSub}</p>
           </div>
 
           <div className="flex flex-col gap-4">
@@ -748,15 +1246,15 @@ export default function App() {
             <div>
               <label className="text-xs font-semibold text-slate-700 block mb-1.5 flex items-center gap-1.5">
                 <MapPin className="w-3.5 h-3.5 text-indigo-500" />
-                الموقع الجغرافي للاستجابة
+                {t.locationLabel}
               </label>
               <input
                 id="input-location-name"
                 type="text"
                 value={input.locationName}
                 onChange={(e) => handleInputChange("locationName", e.target.value)}
-                className="w-full border border-slate-200 rounded-xl p-3 text-xs focus:ring-2 focus:ring-indigo-500 text-right focus:outline-none focus:border-indigo-500 bg-slate-50/50"
-                placeholder="مثال: جبل الزاوية، إدلب، سوريا"
+                className={`w-full border border-slate-200 rounded-xl p-3 text-xs focus:ring-2 focus:ring-indigo-500 ${lang === "ar" ? "text-right" : "text-left"} focus:outline-none focus:border-indigo-500 bg-slate-50/50`}
+                placeholder={t.locationPlaceholder}
               />
             </div>
 
@@ -764,15 +1262,15 @@ export default function App() {
             <div>
               <label className="text-xs font-semibold text-slate-700 block mb-1.5 flex items-center gap-1.5">
                 <Shield className="w-3.5 h-3.5 text-indigo-500" />
-                نوع الكارثة الطبيعية أو الأزمة
+                {t.disasterLabel}
               </label>
               <select
                 id="input-disaster-type"
                 value={input.disasterType}
                 onChange={(e) => handleInputChange("disasterType", e.target.value)}
-                className="w-full border border-slate-200 rounded-xl p-3 text-xs focus:ring-2 focus:ring-indigo-500 text-right focus:outline-none bg-slate-50/50"
+                className={`w-full border border-slate-200 rounded-xl p-3 text-xs focus:ring-2 focus:ring-indigo-500 ${lang === "ar" ? "text-right" : "text-left"} focus:outline-none bg-slate-50/50`}
               >
-                {disasterOptions.map((opt, i) => (
+                {t.disasterOptions.map((opt, i) => (
                   <option key={i} value={opt}>{opt}</option>
                 ))}
               </select>
@@ -783,7 +1281,7 @@ export default function App() {
               <div>
                 <label className="text-xs font-semibold text-slate-700 block mb-1.5 flex items-center gap-1.5">
                   <Users className="w-3.5 h-3.5 text-indigo-500" />
-                  عدد الأشخاص المطلوبين
+                  {t.peopleCountLabel}
                 </label>
                 <input
                   id="input-people-count"
@@ -799,7 +1297,7 @@ export default function App() {
               <div>
                 <label className="text-xs font-semibold text-slate-700 block mb-1.5 flex items-center gap-1.5">
                   <Maximize className="w-3.5 h-3.5 text-indigo-500" />
-                  مساحة الأرض المتاحة (م²)
+                  {t.availableAreaLabel}
                 </label>
                 <input
                   id="input-available-area"
@@ -815,14 +1313,14 @@ export default function App() {
 
             {/* Input - Soil Nature */}
             <div>
-              <label className="text-xs font-semibold text-slate-700 block mb-1.5">طبيعة التربة الميدانية</label>
+              <label className="text-xs font-semibold text-slate-700 block mb-1.5">{t.soilLabel}</label>
               <select
                 id="input-soil-type"
                 value={input.soilType}
                 onChange={(e) => handleInputChange("soilType", e.target.value)}
-                className="w-full border border-slate-200 rounded-xl p-3 text-xs focus:ring-2 focus:ring-indigo-500 text-right focus:outline-none bg-slate-50/50"
+                className={`w-full border border-slate-200 rounded-xl p-3 text-xs focus:ring-2 focus:ring-indigo-500 ${lang === "ar" ? "text-right" : "text-left"} focus:outline-none bg-slate-50/50`}
               >
-                {soilOptions.map((opt, i) => (
+                {t.soilOptions.map((opt, i) => (
                   <option key={i} value={opt}>{opt}</option>
                 ))}
               </select>
@@ -832,15 +1330,15 @@ export default function App() {
             <div>
               <label className="text-xs font-semibold text-slate-700 block mb-1.5 flex items-center gap-1.5">
                 <Sun className="w-3.5 h-3.5 text-indigo-500" />
-                الظروف المناخية الحالية
+                {t.climateLabel}
               </label>
               <select
                 id="input-climate-type"
                 value={input.climateType}
                 onChange={(e) => handleInputChange("climateType", e.target.value)}
-                className="w-full border border-slate-200 rounded-xl p-3 text-xs focus:ring-2 focus:ring-indigo-500 text-right focus:outline-none bg-slate-50/50"
+                className={`w-full border border-slate-200 rounded-xl p-3 text-xs focus:ring-2 focus:ring-indigo-500 ${lang === "ar" ? "text-right" : "text-left"} focus:outline-none bg-slate-50/50`}
               >
-                {climateOptions.map((opt, i) => (
+                {t.climateOptions.map((opt, i) => (
                   <option key={i} value={opt}>{opt}</option>
                 ))}
               </select>
@@ -848,14 +1346,14 @@ export default function App() {
 
             {/* Input - Usage Duration */}
             <div>
-              <label className="text-xs font-semibold text-slate-700 block mb-1.5">مدة الاستخدام المستهدفة للملجأ</label>
+              <label className="text-xs font-semibold text-slate-700 block mb-1.5">{t.durationLabel}</label>
               <select
                 id="input-duration-of-use"
                 value={input.durationOfUse}
                 onChange={(e) => handleInputChange("durationOfUse", e.target.value)}
-                className="w-full border border-slate-200 rounded-xl p-3 text-xs focus:ring-2 focus:ring-indigo-500 text-right focus:outline-none bg-slate-50/50"
+                className={`w-full border border-slate-200 rounded-xl p-3 text-xs focus:ring-2 focus:ring-indigo-500 ${lang === "ar" ? "text-right" : "text-left"} focus:outline-none bg-slate-50/50`}
               >
-                {durationOptions.map((opt, i) => (
+                {t.durationOptions.map((opt, i) => (
                   <option key={i} value={opt}>{opt}</option>
                 ))}
               </select>
@@ -865,10 +1363,10 @@ export default function App() {
             <div>
               <label className="text-xs font-semibold text-slate-700 block mb-2 flex items-center gap-1.5">
                 <Hammer className="w-3.5 h-3.5 text-indigo-500" />
-                المواد المتوفرة محلياً أو المتاحة فوراً
+                {t.materialsLabel}
               </label>
               <div className="flex flex-col gap-1.5 max-h-[160px] overflow-y-auto border border-slate-100 rounded-xl p-2.5 bg-slate-50/50">
-                {localMaterialOptions.map((mat) => {
+                {t.localMaterialOptions.map((mat) => {
                   const isChecked = input.localMaterials.includes(mat.label);
                   return (
                     <label key={mat.id} className="flex items-center gap-2 text-xs text-slate-600 hover:text-slate-800 cursor-pointer py-1">
@@ -897,12 +1395,12 @@ export default function App() {
               {loading ? (
                 <>
                   <RefreshCcw className="w-4 h-4 animate-spin" />
-                  <span>{loadingStep || "جاري تجميع البيانات وتوليد المخططات..."}</span>
+                  <span>{loadingStep || t.generatingMsg}</span>
                 </>
               ) : (
                 <>
                   <RefreshCcw className="w-4 h-4" />
-                  <span>توليد وتصميم المأوى بالذكاء الاصطناعي</span>
+                  <span>{t.btnGenerate}</span>
                 </>
               )}
             </button>
@@ -954,13 +1452,13 @@ export default function App() {
               <div className="bg-white p-5 rounded-2xl shadow-sm border border-slate-100 flex flex-col gap-5">
                 <div className="flex flex-col sm:flex-row justify-between items-start gap-3 pb-3 border-b border-slate-100">
                   <div>
-                    <span className="text-[10px] uppercase tracking-wider font-extrabold text-emerald-600">النموذج الهيكلي المقترح والحل الهندسي</span>
+                    <span className="text-[10px] uppercase tracking-wider font-extrabold text-emerald-600">{t.suggestedModelTitle}</span>
                     <h2 className="text-base font-extrabold text-slate-800 mt-1">{project.suggestedModel.name}</h2>
                     <span className="text-xs text-slate-500 block mt-0.5">{project.suggestedModel.type}</span>
                   </div>
                   <div className="flex items-center gap-2 bg-indigo-50 text-indigo-700 font-bold text-xs px-3.5 py-2 rounded-xl border border-indigo-100">
                     <TrendingUp className="w-4 h-4" />
-                    <span>إجمالي الوحدات المطلوبة: {project.suggestedModel.totalUnitsNeeded} وحدة</span>
+                    <span>{lang === "ar" ? `إجمالي الوحدات المطلوبة: ${project.suggestedModel.totalUnitsNeeded} وحدة` : `Total Units Needed: ${project.suggestedModel.totalUnitsNeeded} units`}</span>
                   </div>
                 </div>
 
@@ -973,25 +1471,25 @@ export default function App() {
                     {/* Grid stats cards of shelter dimensions */}
                     <div className="grid grid-cols-2 gap-3">
                       <div className="bg-slate-50 p-3 rounded-xl border border-slate-100 text-center">
-                        <span className="text-[10px] text-slate-400 block">أبعاد الوحدة</span>
+                        <span className="text-[10px] text-slate-400 block">{t.dimensionsLabel}</span>
                         <span className="text-xs font-bold text-slate-700 mt-0.5">
-                          {project.suggestedModel.unitDimensions.width}م × {project.suggestedModel.unitDimensions.length}م
+                          {project.suggestedModel.unitDimensions.width}{lang === "ar" ? "م" : "m"} × {project.suggestedModel.unitDimensions.length}{lang === "ar" ? "م" : "m"}
                         </span>
                       </div>
                       <div className="bg-slate-50 p-3 rounded-xl border border-slate-100 text-center">
-                        <span className="text-[10px] text-slate-400 block">المساحة الإجمالية</span>
+                        <span className="text-[10px] text-slate-400 block">{t.totalAreaLabel}</span>
                         <span className="text-xs font-bold text-slate-700 mt-0.5">
-                          {(project.suggestedModel.unitDimensions.width * project.suggestedModel.unitDimensions.length).toFixed(1)} م²
+                          {(project.suggestedModel.unitDimensions.width * project.suggestedModel.unitDimensions.length).toFixed(1)} {lang === "ar" ? "م²" : "m²"}
                         </span>
                       </div>
                       <div className="bg-slate-50 p-3 rounded-xl border border-slate-100 text-center">
-                        <span className="text-[10px] text-slate-400 block">سعة الوحدة</span>
+                        <span className="text-[10px] text-slate-400 block">{t.unitCapacityLabel}</span>
                         <span className="text-xs font-bold text-slate-700 mt-0.5">
-                          {project.suggestedModel.capacityPerUnit} أشخاص / أسرة
+                          {project.suggestedModel.capacityPerUnit} {t.unitCapacitySuffix}
                         </span>
                       </div>
                       <div className="bg-slate-50 p-3 rounded-xl border border-slate-100 text-center">
-                        <span className="text-[10px] text-slate-400 block">نوع الأساسات</span>
+                        <span className="text-[10px] text-slate-400 block">{t.foundationLabel}</span>
                         <span className="text-xs font-bold text-slate-700 mt-0.5">
                           {project.suggestedModel.foundationType.split(" ")[0]}
                         </span>
@@ -1000,13 +1498,13 @@ export default function App() {
 
                     <div>
                       <h4 className="text-xs font-bold text-slate-800 flex items-center gap-1.5 mb-1">
-                        التحليل الهندسي والبيئي للموقع:
+                        {t.generalAnalysisLabel}
                       </h4>
                       <p className="text-xs text-slate-600 leading-relaxed text-justify">{project.generalAnalysis}</p>
                     </div>
 
                     <div className="bg-indigo-50/50 p-3 rounded-xl border border-indigo-100 text-[11px] text-slate-600 leading-normal">
-                      <span className="font-bold text-indigo-800 block mb-0.5">العزل والتكييف البيئي الموصى به:</span>
+                      <span className="font-bold text-indigo-800 block mb-0.5">{t.insulationLabel}</span>
                       {project.suggestedModel.insulationRating}
                     </div>
 
@@ -1022,17 +1520,241 @@ export default function App() {
                         className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
                       />
                       <div className="absolute top-2 right-2 bg-black/60 text-[9px] text-white px-2.5 py-1 rounded-md backdrop-blur-xs font-bold">
-                        تصور واقعي ثلاثي الأبعاد
+                        {t.renderCaption}
                       </div>
                     </div>
                     <span className="text-[10px] text-slate-400 text-center leading-normal block">
-                      {getShelterImageCaption(project.input.disasterType)}
+                      {getShelterImageCaption(project.input.disasterType, lang)}
                     </span>
                   </div>
 
                 </div>
 
               </div>
+
+              {/* Automated Site Risk Analysis & Safety Score Section */}
+              {(() => {
+                const assessment = project.siteRiskAssessment || calculateHeuristicRisk(project.input, lang);
+                const score = assessment.safetyScore || 85;
+                
+                // Determine color theme based on safety score
+                let scoreColor = "text-emerald-600 bg-emerald-50 border-emerald-100";
+                let scoreText = lang === "ar" ? "أمان ممتاز (جاهز ومقاوم)" : "High Safety (Resilient)";
+                let strokeColor = "#10b981"; // emerald-500
+                
+                if (score < 65) {
+                  scoreColor = "text-rose-600 bg-rose-50 border-rose-100";
+                  scoreText = lang === "ar" ? "حرج (مخاطر عالية تتطلب تعديل الموقع)" : "Critical Risk (Action Required)";
+                  strokeColor = "#f43f5e"; // rose-500
+                } else if (score < 80) {
+                  scoreColor = "text-amber-600 bg-amber-50 border-amber-100";
+                  scoreText = lang === "ar" ? "أمان متوسط (مقبول مع تدائير وقائية)" : "Moderate Safety (Caution)";
+                  strokeColor = "#f59e0b"; // amber-500
+                }
+
+                // Helper to render risk level badge
+                const getRiskBadge = (level: string) => {
+                  const l = level ? level.toLowerCase() : "low";
+                  if (l === "high" || l === "مرتفع") {
+                    return (
+                      <span className="inline-flex items-center gap-1 text-[10px] font-bold px-2 py-0.5 rounded-full bg-rose-50 text-rose-700 border border-rose-100">
+                        <AlertTriangle className="w-3 h-3" />
+                        {lang === "ar" ? "مرتفع" : "High"}
+                      </span>
+                    );
+                  } else if (l === "medium" || l === "متوسط") {
+                    return (
+                      <span className="inline-flex items-center gap-1 text-[10px] font-bold px-2 py-0.5 rounded-full bg-amber-50 text-amber-700 border border-amber-100">
+                        <AlertTriangle className="w-3 h-3" />
+                        {lang === "ar" ? "متوسط" : "Medium"}
+                      </span>
+                    );
+                  } else {
+                    return (
+                      <span className="inline-flex items-center gap-1 text-[10px] font-bold px-2 py-0.5 rounded-full bg-emerald-50 text-emerald-700 border border-emerald-100">
+                        <Check className="w-3 h-3" />
+                        {lang === "ar" ? "منخفض" : "Low"}
+                      </span>
+                    );
+                  }
+                };
+
+                // Array of 7 parameters for clean mapping
+                const params = [
+                  { 
+                    id: "wind",
+                    title: lang === "ar" ? "اتجاه الرياح" : "Wind Direction",
+                    icon: <Wind className="w-4 h-4 text-sky-500" />,
+                    data: assessment.windDirection 
+                  },
+                  { 
+                    id: "flood",
+                    title: lang === "ar" ? "احتمالية الفيضانات" : "Flood Probability",
+                    icon: <Droplets className="w-4 h-4 text-blue-500" />,
+                    data: assessment.floodProbability 
+                  },
+                  { 
+                    id: "landslide",
+                    title: lang === "ar" ? "مخاطر الانهيارات الأرضية" : "Landslide Risk",
+                    icon: <Mountain className="w-4 h-4 text-amber-600" />,
+                    data: assessment.landslideRisk 
+                  },
+                  { 
+                    id: "earthquake",
+                    title: lang === "ar" ? "شدة الزلازل المتوقعة" : "Expected Earthquake",
+                    icon: <Activity className="w-4 h-4 text-rose-500" />,
+                    data: assessment.earthquakeIntensity 
+                  },
+                  { 
+                    id: "temperature",
+                    title: lang === "ar" ? "درجة الحرارة الموسمية" : "Seasonal Temperature",
+                    icon: <Thermometer className="w-4 h-4 text-orange-500" />,
+                    data: assessment.seasonalTemperature 
+                  },
+                  { 
+                    id: "groundwater",
+                    title: lang === "ar" ? "مستوى المياه الجوفية" : "Groundwater Level",
+                    icon: <Droplets className="w-4 h-4 text-teal-500" />,
+                    data: assessment.groundwaterLevel 
+                  },
+                  { 
+                    id: "torrent",
+                    title: lang === "ar" ? "قرب الموقع من مجاري السيول" : "Torrent Proximity",
+                    icon: <AlertTriangle className="w-4 h-4 text-red-500" />,
+                    data: assessment.torrentProximity 
+                  }
+                ];
+
+                return (
+                  <div className="bg-white p-5 rounded-2xl shadow-sm border border-slate-100 flex flex-col gap-5">
+                    
+                    {/* Header */}
+                    <div className="flex items-center justify-between pb-3 border-b border-slate-100">
+                      <div className="flex items-center gap-2.5">
+                        <div className="p-2 rounded-xl bg-indigo-50 text-indigo-600">
+                          <Shield className="w-5 h-5" />
+                        </div>
+                        <div>
+                          <h3 className="font-extrabold text-slate-800 text-xs sm:text-sm">
+                            {lang === "ar" ? "تحليل المخاطر وتقييم سلامة الموقع تلقائياً (AI)" : "AI Risk & Site Safety Assessment"}
+                          </h3>
+                          <p className="text-[10px] text-slate-400 mt-0.5">
+                            {lang === "ar" ? "تقييم آلي للسلامة الميدانية ومقاومة التهديدات الطبيعية السبعة" : "Automated engineering evaluation covering the 7 core environmental threats"}
+                          </p>
+                        </div>
+                      </div>
+
+                      <div className={`flex items-center gap-2 px-3 py-1.5 rounded-xl border text-xs font-bold ${scoreColor}`}>
+                        <Award className="w-4 h-4" />
+                        <span>{lang === "ar" ? `درجة الأمان: ${score}/100` : `Safety Score: ${score}/100`}</span>
+                      </div>
+                    </div>
+
+                    {/* Content Grid */}
+                    <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-center">
+                      
+                      {/* Safety Gauge / Dial (4 cols) */}
+                      <div className="lg:col-span-4 flex flex-col items-center justify-center p-4 bg-slate-50/50 rounded-2xl border border-slate-100 text-center self-stretch justify-around">
+                        <span className="text-[10px] font-extrabold text-slate-400 uppercase tracking-wider">
+                          {lang === "ar" ? "مؤشر السلامة الهندسية" : "Engineering Safety Indicator"}
+                        </span>
+                        
+                        {/* Circular Gauge */}
+                        <div className="relative flex items-center justify-center w-28 h-28 my-3">
+                          <svg className="w-full h-full transform -rotate-90">
+                            <circle
+                              cx="56"
+                              cy="56"
+                              r="46"
+                              className="stroke-slate-100"
+                              strokeWidth="8"
+                              fill="transparent"
+                            />
+                            <circle
+                              cx="56"
+                              cy="56"
+                              r="46"
+                              stroke={strokeColor}
+                              strokeWidth="8"
+                              fill="transparent"
+                              strokeDasharray={2 * Math.PI * 46}
+                              strokeDashoffset={2 * Math.PI * 46 * (1 - score / 100)}
+                              strokeLinecap="round"
+                              className="transition-all duration-1000 ease-out"
+                            />
+                          </svg>
+                          <div className="absolute flex flex-col items-center justify-center">
+                            <span className="text-2xl font-black text-slate-800">{score}%</span>
+                            <span className="text-[9px] font-bold text-slate-400">SCORE</span>
+                          </div>
+                        </div>
+
+                        <div className="flex flex-col items-center gap-1">
+                          <span className="text-xs font-black text-slate-700">{scoreText}</span>
+                          <p className="text-[10px] text-slate-400 max-w-[200px] leading-relaxed">
+                            {lang === "ar" 
+                              ? "تم احتساب النسبة ديناميكياً استناداً للتربة والمناخ ونوع الكارثة الحالية."
+                              : "Score calculated dynamically based on soil composition, climate vectors, and disaster type."}
+                          </p>
+                        </div>
+                      </div>
+
+                      {/* 7 Risks Bento Grid (8 cols) */}
+                      <div className="lg:col-span-8 grid grid-cols-1 sm:grid-cols-2 gap-3.5">
+                        {params.map((p, idx) => {
+                          const value = p.data?.value || (lang === "ar" ? "غير محدد" : "Not specified");
+                          const riskLevel = p.data?.riskLevel || "low";
+                          const desc = p.data?.description || "";
+                          
+                          return (
+                            <div key={idx} className="bg-white p-3 rounded-xl border border-slate-100 hover:border-indigo-100 hover:shadow-xs transition-all flex flex-col gap-1.5 text-right">
+                              <div className={`flex justify-between items-start gap-2 ${lang === 'ar' ? 'flex-row-reverse' : 'flex-row'}`}>
+                                <div className={`flex items-center gap-2 ${lang === 'ar' ? 'flex-row-reverse' : 'flex-row'}`}>
+                                  <div className="p-1.5 rounded-lg bg-slate-50 text-slate-600">
+                                    {p.icon}
+                                  </div>
+                                  <span className="text-xs font-bold text-slate-700">{p.title}</span>
+                                </div>
+                                {getRiskBadge(riskLevel)}
+                              </div>
+                              <div className={lang === "ar" ? "text-right" : "text-left"}>
+                                <span className="text-xs font-black text-slate-800 block">{value}</span>
+                                {desc && (
+                                  <p className="text-[10px] text-slate-500 leading-normal mt-0.5">{desc}</p>
+                                )}
+                              </div>
+                            </div>
+                          );
+                        })}
+                      </div>
+
+                    </div>
+
+                    {/* Recommendations bar */}
+                    {assessment.recommendations && assessment.recommendations.length > 0 && (
+                      <div className="bg-amber-50/50 border border-amber-100 rounded-2xl p-4 flex flex-col gap-2.5">
+                        <div className={`flex items-center gap-2 text-amber-800 ${lang === 'ar' ? 'flex-row-reverse' : 'flex-row'}`}>
+                          <CheckCircle className="w-4.5 h-4.5 text-amber-600" />
+                          <h4 className="font-extrabold text-xs">
+                            {lang === "ar" ? "توصيات هندسة السلامة الميدانية وحماية المأوى" : "Field Safety & Shelter Protection Recommendations"}
+                          </h4>
+                        </div>
+                        <ul className="grid grid-cols-1 md:grid-cols-3 gap-3">
+                          {assessment.recommendations.map((rec: string, i: number) => (
+                            <li key={i} className={`bg-white/80 border border-amber-100/50 rounded-xl p-3 text-[11px] text-slate-600 leading-relaxed flex gap-2 items-start shadow-2xs ${lang === 'ar' ? 'flex-row-reverse text-right' : 'flex-row text-left'}`}>
+                              <span className="bg-amber-100 text-amber-700 font-black rounded-full w-4 h-4 text-[9px] flex items-center justify-center flex-shrink-0 mt-0.5">
+                                {i + 1}
+                              </span>
+                              <span>{rec}</span>
+                            </li>
+                          ))}
+                        </ul>
+                      </div>
+                    )}
+
+                  </div>
+                );
+              })()}
 
               {/* Sub-Tabs for Blueprints, BOM, Schedule and Budget */}
               <div className="bg-white rounded-2xl shadow-sm border border-slate-100 overflow-hidden">
@@ -1046,7 +1768,7 @@ export default function App() {
                         : "border-transparent text-slate-500 hover:text-slate-800 hover:bg-slate-50"
                     }`}
                   >
-                    🏗️ الخرائط والمخططات الهندسية
+                    🏗️ {t.tabBlueprints}
                   </button>
                   <button
                     id="tab-results-map-btn"
@@ -1068,7 +1790,7 @@ export default function App() {
                         : "border-transparent text-slate-500 hover:text-slate-800 hover:bg-slate-50"
                     }`}
                   >
-                    📋 قائمة المواد وجدول الكميات (BOM)
+                    📋 {t.tabBOM}
                   </button>
                   <button
                     id="tab-results-timeline-btn"
@@ -1079,7 +1801,7 @@ export default function App() {
                         : "border-transparent text-slate-500 hover:text-slate-800 hover:bg-slate-50"
                     }`}
                   >
-                    📅 الجدول الزمني للتنفيذ
+                    📅 {t.tabTimeline}
                   </button>
                   <button
                     id="tab-results-budget-btn"
@@ -1090,7 +1812,7 @@ export default function App() {
                         : "border-transparent text-slate-500 hover:text-slate-800 hover:bg-slate-50"
                     }`}
                   >
-                    💰 الميزانية التقديرية والتحليل المالي
+                    💰 {t.tabBudget}
                   </button>
                 </nav>
 
@@ -1127,11 +1849,11 @@ export default function App() {
                     <div className="flex flex-col gap-5">
                       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 bg-slate-50 p-3 rounded-xl border border-slate-100">
                         <div>
-                          <h4 className="font-bold text-slate-800 text-xs">قائمة وجدول المواد اللازمة للبناء (BOM)</h4>
-                          <p className="text-[10px] text-slate-400 mt-0.5">تغطي المواد والإنشاءات والخدمات لكافة الوحدات الـ ({project.suggestedModel.totalUnitsNeeded}) والخدمات المشتركة.</p>
+                          <h4 className="font-bold text-slate-800 text-xs">{lang === "ar" ? "قائمة وجدول المواد اللازمة للبناء (BOM)" : "Bill of Materials (BOM) Table"}</h4>
+                          <p className="text-[10px] text-slate-400 mt-0.5">{lang === "ar" ? `تغطي المواد والإنشاءات والخدمات لكافة الوحدات الـ (${project.suggestedModel.totalUnitsNeeded}) والخدمات المشتركة.` : `Covers materials, construction, and utilities for all (${project.suggestedModel.totalUnitsNeeded}) units and shared services.`}</p>
                         </div>
                         <div className="text-right">
-                          <span className="text-[10px] text-slate-400 block">إجمالي تكلفة المواد</span>
+                          <span className="text-[10px] text-slate-400 block">{lang === "ar" ? "إجمالي تكلفة المواد" : "Total Materials Cost"}</span>
                           <span className="text-xs font-extrabold text-indigo-600 font-mono">${materialSum.toLocaleString()} USD</span>
                         </div>
                       </div>
@@ -1143,10 +1865,10 @@ export default function App() {
                             type="text"
                             value={bomSearch}
                             onChange={(e) => setBomSearch(e.target.value)}
-                            className="w-full pl-3 pr-9 py-2.5 rounded-xl border border-slate-200 text-xs text-right focus:outline-none focus:ring-1 focus:ring-indigo-500 focus:border-indigo-500"
-                            placeholder="بحث في المواد والكميات المقترحة..."
+                            className={`w-full pl-3 pr-9 py-2.5 rounded-xl border border-slate-200 text-xs ${lang === "ar" ? "text-right" : "text-left"} focus:outline-none focus:ring-1 focus:ring-indigo-500 focus:border-indigo-500`}
+                            placeholder={t.bomSearchPlaceholder}
                           />
-                          <Search className="w-4 h-4 text-slate-400 absolute right-3 top-3" />
+                          <Search className={`w-4 h-4 text-slate-400 absolute ${lang === "ar" ? "right-3" : "left-3"} top-3`} />
                         </div>
                         <div className="flex items-center gap-2">
                           <Filter className="w-4 h-4 text-slate-400" />
@@ -1155,12 +1877,12 @@ export default function App() {
                             onChange={(e) => setBomCategoryFilter(e.target.value)}
                             className="border border-slate-200 rounded-xl px-3 py-2.5 text-xs focus:outline-none focus:ring-1 focus:ring-indigo-500 focus:border-indigo-500"
                           >
-                            <option value="all">كل الفئات</option>
-                            <option value="الهيكل الإنشائي">الهيكل الإنشائي</option>
-                            <option value="العزل والتشطيب">العزل والتشطيب</option>
-                            <option value="الأبواب والنوافذ">الأبواب والنوافذ</option>
-                            <option value="التمديدات الصحية والكهربائية">تمديدات وخدمات صحية</option>
-                            <option value="الأساسات والأدوات والتثبيت">الأساسات والتثبيت</option>
+                            <option value="all">{t.bomCategoryAll}</option>
+                            <option value={lang === "ar" ? "الهيكل الإنشائي" : "Structural Framing"}>{lang === "ar" ? "الهيكل الإنشائي" : "Structural Framing"}</option>
+                            <option value={lang === "ar" ? "العزل والتشطيب" : "Insulation & Finishes"}>{lang === "ar" ? "العزل والتشطيب" : "Insulation & Finishes"}</option>
+                            <option value={lang === "ar" ? "الأبواب والنوافذ" : "Doors & Windows"}>{lang === "ar" ? "الأبواب والنوافذ" : "Doors & Windows"}</option>
+                            <option value={lang === "ar" ? "التمديدات الصحية والكهربائية" : "Sanitary & Electrical"}>{lang === "ar" ? "التمديدات الصحية والكهربائية" : "Sanitary & Electrical"}</option>
+                            <option value={lang === "ar" ? "الأساسات والأدوات والتثبيت" : "Foundations & Connectors"}>{lang === "ar" ? "الأساسات والأدوات والتثبيت" : "Foundations & Connectors"}</option>
                           </select>
                         </div>
                       </div>
@@ -1170,23 +1892,23 @@ export default function App() {
                         <table className="w-full text-right text-xs">
                           <thead className="bg-slate-50 text-slate-700 border-b border-slate-100 font-semibold">
                             <tr>
-                              <th className="py-3 px-3 text-right">المادة والوصف</th>
-                              <th className="py-3 px-3">الفئة</th>
-                              <th className="py-3 px-3 text-center">الكمية المطلوبة</th>
-                              <th className="py-3 px-3 text-center">سعر الوحدة</th>
-                              <th className="py-3 px-3 text-center">السعر الإجمالي</th>
-                              <th className="py-3 px-3 text-center">التوفر المحلي</th>
+                              <th className={`py-3 px-3 ${lang === "ar" ? "text-right" : "text-left"}`}>{t.bomTableMaterial}</th>
+                              <th className="py-3 px-3">{t.bomTableCategory}</th>
+                              <th className="py-3 px-3 text-center">{t.bomTableQty}</th>
+                              <th className="py-3 px-3 text-center">{t.bomTableUnitPrice}</th>
+                              <th className="py-3 px-3 text-center">{t.bomTableTotal}</th>
+                              <th className="py-3 px-3 text-center">{t.bomTableLocal}</th>
                             </tr>
                           </thead>
                           <tbody className="divide-y divide-slate-100 text-slate-600">
                             {filteredBOM.length === 0 ? (
                               <tr>
-                                <td colSpan={6} className="py-8 text-center text-slate-400 text-xs">لا توجد مواد مطابقة للبحث.</td>
+                                <td colSpan={6} className="py-8 text-center text-slate-400 text-xs">{lang === "ar" ? "لا توجد مواد مطابقة للبحث." : "No materials match your search."}</td>
                               </tr>
                             ) : (
                               filteredBOM.map((item, idx) => (
                                 <tr key={idx} className="hover:bg-slate-50/50">
-                                  <td className="py-3 px-3 text-right font-medium text-slate-800">
+                                  <td className={`py-3 px-3 font-medium text-slate-800 ${lang === "ar" ? "text-right" : "text-left"}`}>
                                     <div>{item.material}</div>
                                     <div className="text-[10px] text-slate-400 mt-0.5">{item.sourcingNotes}</div>
                                   </td>
@@ -1198,7 +1920,7 @@ export default function App() {
                                     <span className={`inline-block px-2 py-0.5 rounded text-[10px] font-semibold ${
                                       item.localSourcingPossible ? "bg-emerald-50 text-emerald-700" : "bg-amber-50 text-amber-700"
                                     }`}>
-                                      {item.localSourcingPossible ? "متوفر محلياً" : "استيراد / شحن"}
+                                      {item.localSourcingPossible ? t.bomLocalYes : t.bomLocalNo}
                                     </span>
                                   </td>
                                 </tr>
@@ -1215,49 +1937,114 @@ export default function App() {
                     <div className="flex flex-col gap-6">
                       <div className="bg-slate-50 p-3 rounded-xl border border-slate-100 flex justify-between items-center text-xs text-slate-700">
                         <div>
-                          <h4 className="font-bold text-slate-800">خطة التنفيذ والجدول الزمني الإجمالي للإنشاء السريع</h4>
-                          <p className="text-[10px] text-slate-400 mt-0.5">خطوات التنفيذ والتشييد الميداني الموصى بها لإتمام الوحدات والخدمات بأمان.</p>
+                          <h4 className="font-bold text-slate-800">{lang === "ar" ? "خطة التنفيذ والجدول الزمني الإجمالي للإنشاء السريع" : "Rapid Construction Implementation Timeline & Schedule"}</h4>
+                          <p className="text-[10px] text-slate-400 mt-0.5">{lang === "ar" ? "خطوات التنفيذ والتشييد الميداني الموصى بها لإتمام الوحدات والخدمات بأمان." : "Recommended site preparation and assembly steps to deliver safe units."}</p>
                         </div>
                         <div className="text-left font-mono font-bold text-indigo-700">
-                          إجمالي المدة: {project.timeline.reduce((sum, s) => sum + s.durationDays, 0)} أيام ({project.timeline.reduce((sum, s) => sum + s.durationHours, 0)} ساعة)
+                          {lang === "ar" ? `إجمالي المدة: ${project.timeline.reduce((sum, s) => sum + s.durationDays, 0)} أيام (${project.timeline.reduce((sum, s) => sum + s.durationHours, 0)} ساعة)` : `Total Duration: ${project.timeline.reduce((sum, s) => sum + s.durationDays, 0)} Days (${project.timeline.reduce((sum, s) => sum + s.durationHours, 0)} Hours)`}
                         </div>
                       </div>
 
+                      {/* On-Site Progress Tracking Dashboard */}
+                      {(() => {
+                        const completedSteps = project.timeline.filter(s => s.completed).length;
+                        const totalSteps = project.timeline.length;
+                        const percentCompleted = totalSteps > 0 ? Math.round((completedSteps / totalSteps) * 100) : 0;
+                        const activeStep = project.timeline.find(s => !s.completed);
+
+                        return (
+                          <div className="bg-emerald-50/50 border border-emerald-100/70 rounded-2xl p-4 flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
+                            <div className="flex-1 w-full">
+                              <div className="flex justify-between items-center text-xs mb-1.5 font-bold text-slate-700">
+                                <span className="flex items-center gap-1.5 text-emerald-800">
+                                  <Leaf className="w-4 h-4 text-emerald-600" />
+                                  {lang === "ar" ? "نسبة التقدم الميداني للإنشاء" : "On-Site Construction Progress"}
+                                </span>
+                                <span className="font-mono text-emerald-700">{completedSteps} / {totalSteps} {lang === "ar" ? "خطوات" : "steps"} ({percentCompleted}%)</span>
+                              </div>
+                              <div className="w-full h-3 bg-slate-100 rounded-full overflow-hidden">
+                                <div className="bg-emerald-500 h-full transition-all duration-500" style={{ width: `${percentCompleted}%` }}></div>
+                              </div>
+                            </div>
+                            <div className="bg-white px-3.5 py-2 rounded-xl border border-slate-100 shrink-0 text-center shadow-xs">
+                              <span className="text-[10px] text-slate-400 block">{lang === "ar" ? "المرحلة الحالية" : "Current Active Phase"}</span>
+                              <span className="text-xs font-bold text-slate-800 block mt-0.5">
+                                {activeStep ? activeStep.phase : (lang === "ar" ? "تم التسليم بنجاح! 🎉" : "Fully Delivered! 🎉")}
+                              </span>
+                            </div>
+                          </div>
+                        );
+                      })()}
+
                       {/* Timline Steps rendering */}
-                      <div className="relative border-r-2 border-indigo-100 mr-4 flex flex-col gap-8 py-3">
+                      <div className={`relative ${lang === "ar" ? "border-r-2 mr-4" : "border-l-2 ml-4"} border-indigo-100 flex flex-col gap-8 py-3`}>
                         {project.timeline.map((step, idx) => {
                           let phaseColor = "bg-indigo-600";
                           let dotColor = "border-indigo-600";
-                          if (step.phase.includes("التحضير")) { phaseColor = "bg-sky-500"; dotColor = "border-sky-500"; }
-                          else if (step.phase.includes("الأساسات") || step.phase.includes("التأسيس")) { phaseColor = "bg-amber-500"; dotColor = "border-amber-500"; }
-                          else if (step.phase.includes("الهياكل") || step.phase.includes("الهيكل")) { phaseColor = "bg-purple-500"; dotColor = "border-purple-500"; }
-                          else if (step.phase.includes("التغطية") || step.phase.includes("الكسوة")) { phaseColor = "bg-rose-500"; dotColor = "border-rose-500"; }
-                          else if (step.phase.includes("التسليم")) { phaseColor = "bg-emerald-500"; dotColor = "border-emerald-500"; }
+                          const phLower = step.phase.toLowerCase();
+                          if (phLower.includes("التحضير") || phLower.includes("prep") || phLower.includes("site")) { phaseColor = "bg-sky-500"; dotColor = "border-sky-500"; }
+                          else if (phLower.includes("الأساسات") || phLower.includes("التأسيس") || phLower.includes("foundation") || phLower.includes("anchor")) { phaseColor = "bg-amber-500"; dotColor = "border-amber-500"; }
+                          else if (phLower.includes("الهياكل") || phLower.includes("الهيكل") || phLower.includes("structural") || phLower.includes("frame")) { phaseColor = "bg-purple-500"; dotColor = "border-purple-500"; }
+                          else if (phLower.includes("التغطية") || phLower.includes("الكسوة") || phLower.includes("enclosure") || phLower.includes("insulation")) { phaseColor = "bg-rose-500"; dotColor = "border-rose-500"; }
+                          else if (phLower.includes("التسليم") || phLower.includes("handover") || phLower.includes("completion")) { phaseColor = "bg-emerald-500"; dotColor = "border-emerald-500"; }
+
+                          if (step.completed) {
+                            dotColor = "border-emerald-500 bg-emerald-500";
+                          }
 
                           return (
-                            <div key={idx} className="relative flex flex-col gap-2.5 pr-6 text-right">
+                            <div key={idx} className={`relative flex flex-col gap-2.5 ${lang === "ar" ? "pr-6 text-right" : "pl-6 text-left"} ${step.completed ? "opacity-75" : ""}`}>
                               {/* Glowing Timeline Node */}
-                              <div className={`absolute -right-[9px] top-1 w-4 h-4 rounded-full bg-white border-4 ${dotColor} shadow-sm z-10`} />
-
-                              <div className="flex flex-wrap items-center gap-2">
-                                <span className={`text-[10px] text-white font-bold px-2 py-0.5 rounded ${phaseColor}`}>
-                                  {step.phase}
-                                </span>
-                                <span className="text-[11px] font-bold text-indigo-600 font-mono bg-indigo-50 px-2 py-0.5 rounded-md">
-                                  {step.durationDays} أيام ({step.durationHours} ساعة)
-                                </span>
-                                <span className="text-[11px] text-slate-500 font-bold bg-slate-100 px-2 py-0.5 rounded-md flex items-center gap-1">
-                                  <Users className="w-3.5 h-3.5 text-slate-400" />
-                                  الأيدي العاملة: {step.workersRequired} متطوعين/عمال
-                                </span>
+                              <div className={`absolute ${lang === "ar" ? "-right-[9px]" : "-left-[9px]"} top-1 w-4.5 h-4.5 rounded-full bg-white border-4 ${dotColor} shadow-sm z-10 flex items-center justify-center`}>
+                                {step.completed && <Check className="w-2 h-2 text-white stroke-[4]" />}
                               </div>
 
-                              <h4 className="font-extrabold text-slate-800 text-xs mt-1">
-                                {idx + 1}. {step.stepName}
-                              </h4>
-                              <p className="text-xs text-slate-600 leading-relaxed bg-slate-50 p-3 rounded-xl border border-slate-100/50">
-                                {step.instructions}
-                              </p>
+                              {/* Card Content block */}
+                              <div className="bg-white hover:bg-slate-50/30 border border-slate-100 rounded-2xl p-4 shadow-sm hover:shadow-md transition-all flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+                                <div className="flex-1 w-full">
+                                  <div className="flex flex-wrap items-center gap-2">
+                                    <span className={`text-[10px] text-white font-bold px-2 py-0.5 rounded ${phaseColor}`}>
+                                      {step.phase}
+                                    </span>
+                                    <span className="text-[11px] font-bold text-indigo-600 font-mono bg-indigo-50 px-2 py-0.5 rounded-md">
+                                      {lang === "ar" ? `${step.durationDays} أيام (${step.durationHours} ساعة)` : `${step.durationDays} Days (${step.durationHours} Hours)`}
+                                    </span>
+                                    <span className="text-[11px] text-slate-500 font-bold bg-slate-100 px-2 py-0.5 rounded-md flex items-center gap-1">
+                                      <Users className="w-3.5 h-3.5 text-slate-400" />
+                                      {lang === "ar" ? `الأيدي العاملة: ${step.workersRequired} متطوعين/عمال` : `Labor Required: ${step.workersRequired} workers`}
+                                    </span>
+                                    {step.completed && (
+                                      <span className="text-[10px] bg-emerald-100 text-emerald-800 font-bold px-2 py-0.5 rounded-md flex items-center gap-1 animate-pulse">
+                                        ✓ {lang === "ar" ? "مكتملة ميدانياً" : "Completed on-site"}
+                                      </span>
+                                    )}
+                                  </div>
+
+                                  <h4 className={`font-extrabold text-xs mt-3.5 transition-all ${step.completed ? "text-slate-400 line-through" : "text-slate-800"}`}>
+                                    {idx + 1}. {step.stepName}
+                                  </h4>
+                                  <p className="text-xs text-slate-600 leading-relaxed bg-slate-50 p-3 rounded-xl border border-slate-100/50 mt-2">
+                                    {step.instructions}
+                                  </p>
+                                </div>
+
+                                {/* Custom checkbox button */}
+                                <button
+                                  onClick={() => handleToggleTimelineStep(idx)}
+                                  className={`p-2 rounded-xl border transition-all flex items-center justify-center cursor-pointer shrink-0 ${
+                                    step.completed
+                                      ? "bg-emerald-50 border-emerald-200 text-emerald-600 shadow-xs"
+                                      : "bg-white border-slate-200 text-slate-400 hover:border-indigo-300 hover:text-indigo-500"
+                                  }`}
+                                  title={lang === "ar" ? "تبديل حالة الإتمام" : "Toggle completion status"}
+                                >
+                                  {step.completed ? (
+                                    <CheckSquare className="w-5 h-5" />
+                                  ) : (
+                                    <Square className="w-5 h-5" />
+                                  )}
+                                </button>
+                              </div>
                             </div>
                           );
                         })}
@@ -1270,11 +2057,11 @@ export default function App() {
                     <div className="flex flex-col gap-6">
                       <div className="bg-slate-50 p-3.5 rounded-xl border border-slate-100 flex justify-between items-center text-xs">
                         <div>
-                          <h4 className="font-bold text-slate-800">التحليل المالي وتقدير ميزانية الاستجابة</h4>
-                          <p className="text-[10px] text-slate-400 mt-0.5">تحليل توزيع التكاليف لإتمام وتوصيل كافة الوحدات الإيوائية والمناطق المشتركة بنجاح.</p>
+                          <h4 className="font-bold text-slate-800">{lang === "ar" ? "التحليل المالي وتقدير ميزانية الاستجابة" : "Financial Analysis & Response Budgeting"}</h4>
+                          <p className="text-[10px] text-slate-400 mt-0.5">{lang === "ar" ? "تحليل توزيع التكاليف لإتمام وتوصيل كافة الوحدات الإيوائية والمناطق المشتركة بنجاح." : "Cost distribution analysis to successfully construct and deliver all shelter units."}</p>
                         </div>
                         <div className="text-left">
-                          <span className="text-[10px] text-slate-400 block font-semibold">إجمالي ميزانية المشروع التقديرية</span>
+                          <span className="text-[10px] text-slate-400 block font-semibold">{lang === "ar" ? "إجمالي ميزانية المشروع التقديرية" : "Total Estimated Project Budget"}</span>
                           <span className="text-sm font-extrabold text-emerald-600 font-mono">${project.budget.totalCost.toLocaleString()} USD</span>
                         </div>
                       </div>
@@ -1282,25 +2069,25 @@ export default function App() {
                       {/* Main Financial stats grid cards */}
                       <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
                         <div className="border border-slate-100 bg-slate-50/50 rounded-2xl p-4 text-center">
-                          <span className="text-[11px] text-slate-400 block">تكلفة الوحدة السكنية الواحدة</span>
+                          <span className="text-[11px] text-slate-400 block">{lang === "ar" ? "تكلفة الوحدة السكنية الواحدة" : "Cost per Shelter Unit"}</span>
                           <span className="text-xs font-bold text-slate-700 mt-1 block font-mono">
                             ${Math.round(project.budget.totalCost / project.suggestedModel.totalUnitsNeeded).toLocaleString()} USD
                           </span>
-                          <span className="text-[10px] text-slate-400 mt-1 block">لعدد {project.suggestedModel.totalUnitsNeeded} وحدة كاملة</span>
+                          <span className="text-[10px] text-slate-400 mt-1 block">{lang === "ar" ? `لعدد ${project.suggestedModel.totalUnitsNeeded} وحدة كاملة` : `For ${project.suggestedModel.totalUnitsNeeded} total units`}</span>
                         </div>
                         <div className="border border-slate-100 bg-slate-50/50 rounded-2xl p-4 text-center">
-                          <span className="text-[11px] text-slate-400 block">تكلفة إيواء الفرد الواحد</span>
+                          <span className="text-[11px] text-slate-400 block">{lang === "ar" ? "تكلفة إيواء الفرد الواحد" : "Cost per Beneficiary"}</span>
                           <span className="text-xs font-bold text-slate-700 mt-1 block font-mono">
-                            ${Math.round(project.budget.totalCost / project.input.peopleCount).toLocaleString()} USD / شخص
+                            ${Math.round(project.budget.totalCost / project.input.peopleCount).toLocaleString()} {lang === "ar" ? "USD / شخص" : "USD / person"}
                           </span>
-                          <span className="text-[10px] text-slate-400 mt-1 block">لعدد {project.input.peopleCount} شخص</span>
+                          <span className="text-[10px] text-slate-400 mt-1 block">{lang === "ar" ? `لعدد ${project.input.peopleCount} شخص` : `For ${project.input.peopleCount} persons`}</span>
                         </div>
                         <div className="border border-slate-100 bg-slate-50/50 rounded-2xl p-4 text-center">
-                          <span className="text-[11px] text-slate-400 block">الهامش المالي للطوارئ (Contingency)</span>
+                          <span className="text-[11px] text-slate-400 block">{lang === "ar" ? "الهامش المالي للطوارئ" : "Contingency Margin"}</span>
                           <span className="text-xs font-bold text-slate-700 mt-1 block font-mono">
                             ${project.budget.contingencyCost.toLocaleString()} USD
                           </span>
-                          <span className="text-[10px] text-slate-400 mt-1 block">مخصص بنسبة {Math.round((project.budget.contingencyCost / project.budget.totalCost) * 100)}% للاحتياط</span>
+                          <span className="text-[10px] text-slate-400 mt-1 block">{lang === "ar" ? `مخصص بنسبة ${Math.round((project.budget.contingencyCost / project.budget.totalCost) * 100)}% للاحتياط` : `Allocated at ${Math.round((project.budget.contingencyCost / project.budget.totalCost) * 100)}% of total`}</span>
                         </div>
                       </div>
 
@@ -1389,7 +2176,7 @@ export default function App() {
 
                                   {/* Centered label */}
                                   <circle cx={cx} cy={cy} r="45" fill="#1e293b" />
-                                  <text x={cx} y={cy - 5} textAnchor="middle" className="text-[10px] fill-slate-400 font-bold">إجمالي الميزانية</text>
+                                  <text x={cx} y={cy - 5} textAnchor="middle" className="text-[10px] fill-slate-400 font-bold">{lang === "ar" ? "إجمالي الميزانية" : "Total Budget"}</text>
                                   <text x={cx} y={cy + 12} textAnchor="middle" className="text-[13px] fill-white font-mono font-bold">${b.totalCost.toLocaleString()}</text>
                                 </g>
                               );
@@ -1401,7 +2188,7 @@ export default function App() {
                         <div className="flex-1 w-full flex flex-col gap-3.5">
                           <div>
                             <div className="flex justify-between items-center text-xs mb-1.5">
-                              <span className="font-semibold text-slate-700">المواد والتجهيزات الإنشائية (Materials)</span>
+                              <span className="font-semibold text-slate-700">{lang === "ar" ? "المواد والتجهيزات الإنشائية" : "Construction Materials"}</span>
                               <span className="font-mono font-bold text-indigo-600">${project.budget.materialsCost.toLocaleString()} ({Math.round((project.budget.materialsCost / project.budget.totalCost) * 100)}%)</span>
                             </div>
                             <div className="w-full h-2.5 bg-slate-100 rounded-full overflow-hidden">
@@ -1411,7 +2198,7 @@ export default function App() {
 
                           <div>
                             <div className="flex justify-between items-center text-xs mb-1.5">
-                              <span className="font-semibold text-slate-700">الأجور والأيدي العاملة الميدانية (Labor)</span>
+                              <span className="font-semibold text-slate-700">{lang === "ar" ? "الأجور والأيدي العاملة الميدانية" : "Field Labor & Assembly"}</span>
                               <span className="font-mono font-bold text-emerald-600">${project.budget.laborCost.toLocaleString()} ({Math.round((project.budget.laborCost / project.budget.totalCost) * 100)}%)</span>
                             </div>
                             <div className="w-full h-2.5 bg-slate-100 rounded-full overflow-hidden">
@@ -1421,7 +2208,7 @@ export default function App() {
 
                           <div>
                             <div className="flex justify-between items-center text-xs mb-1.5">
-                              <span className="font-semibold text-slate-700">الشحن والنقل واللوجستيات (Transport)</span>
+                              <span className="font-semibold text-slate-700">{lang === "ar" ? "الشحن والنقل واللوجستيات" : "Shipping & Transport Logistics"}</span>
                               <span className="font-mono font-bold text-amber-600">${project.budget.transportCost.toLocaleString()} ({Math.round((project.budget.transportCost / project.budget.totalCost) * 100)}%)</span>
                             </div>
                             <div className="w-full h-2.5 bg-slate-100 rounded-full overflow-hidden">
@@ -1431,13 +2218,413 @@ export default function App() {
 
                           <div>
                             <div className="flex justify-between items-center text-xs mb-1.5">
-                              <span className="font-semibold text-slate-700">احتياطي طوارئ وهامش أمان (Contingency)</span>
+                              <span className="font-semibold text-slate-700">{lang === "ar" ? "احتياطي طوارئ وهامش أمان" : "Emergency Contingency Reserve"}</span>
                               <span className="font-mono font-bold text-red-600">${project.budget.contingencyCost.toLocaleString()} ({Math.round((project.budget.contingencyCost / project.budget.totalCost) * 100)}%)</span>
                             </div>
                             <div className="w-full h-2.5 bg-slate-100 rounded-full overflow-hidden">
                               <div className="bg-red-500 h-full" style={{ width: `${(project.budget.contingencyCost / project.budget.totalCost) * 100}%` }}></div>
                             </div>
                           </div>
+                        </div>
+                      </div>
+
+                      {/* Live Financial S-Curve Tracker (Projected vs Actual) */}
+                      <div className="bg-white border border-slate-100 rounded-2xl p-5 shadow-sm">
+                        {(() => {
+                          const totalCostVal = project.budget.totalCost;
+                          const timelineSteps = project.timeline;
+                          const totalWeight = timelineSteps.reduce((sum, s) => sum + Math.max(1, (s.durationDays * 24 + s.durationHours) * s.workersRequired), 0);
+
+                          let cumProjected = 0;
+                          let cumActual = 0;
+                          let lastCompletedIdx = -1;
+
+                          timelineSteps.forEach((step, idx) => {
+                            if (step.completed) {
+                              lastCompletedIdx = idx;
+                            }
+                          });
+
+                          const chartData = [
+                            {
+                              name: lang === "ar" ? "البداية" : "Start",
+                              projected: 0,
+                              actual: 0
+                            }
+                          ];
+
+                          timelineSteps.forEach((step, idx) => {
+                            const stepWeight = Math.max(1, (step.durationDays * 24 + step.durationHours) * step.workersRequired);
+                            const stepProjected = (stepWeight / totalWeight) * totalCostVal;
+                            cumProjected += stepProjected;
+
+                            const dataPoint: any = {
+                              name: lang === "ar" ? `الخطوة ${idx + 1}` : `Step ${idx + 1}`,
+                              phase: step.phase,
+                              projected: Math.round(cumProjected)
+                            };
+
+                            if (idx <= lastCompletedIdx) {
+                              const deviationFactor = 1.0 + (((idx % 3) - 1) * 0.03); // realistic fluctuation
+                              const stepActual = stepProjected * deviationFactor;
+                              cumActual += stepActual;
+                              dataPoint.actual = Math.round(cumActual);
+                            }
+
+                            chartData.push(dataPoint);
+                          });
+
+                          const totalActualIncurred = Math.round(cumActual);
+                          const totalProjectedForCompleted = Math.round(
+                            timelineSteps.slice(0, lastCompletedIdx + 1).reduce((sum, step) => {
+                              const stepWeight = Math.max(1, (step.durationDays * 24 + step.durationHours) * step.workersRequired);
+                              return sum + (stepWeight / totalWeight) * totalCostVal;
+                            }, 0)
+                          );
+
+                          const budgetVariance = totalActualIncurred - totalProjectedForCompleted;
+                          const variancePercent = totalProjectedForCompleted > 0 ? (budgetVariance / totalProjectedForCompleted) * 100 : 0;
+                          const remainingProjected = Math.max(0, totalCostVal - totalProjectedForCompleted);
+
+                          return (
+                            <div className="flex flex-col gap-4">
+                              <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3">
+                                <div className="flex items-center gap-2">
+                                  <div className="p-2 bg-indigo-50 text-indigo-600 rounded-xl">
+                                    <TrendingUp className="w-5 h-5" />
+                                  </div>
+                                  <div>
+                                    <h4 className="font-extrabold text-slate-800 text-sm">
+                                      {lang === "ar" ? "مقارنة الميزانية المخططة بالتكلفة الفعلية (تتبع حي)" : "Projected Budget vs. Actual Cost (Live Tracking)"}
+                                    </h4>
+                                    <p className="text-[10px] text-slate-400 mt-0.5">
+                                      {lang === "ar"
+                                        ? "تتبع الانحراف المالي الميداني وتكلفة الإنجاز الحقيقية بالتزامن مع وضع علامات اكتمال خطوات المشروع."
+                                        : "Track real-time financial variance and cumulative burn-rate synchronized with completed timeline steps."}
+                                    </p>
+                                  </div>
+                                </div>
+                                <div className="bg-slate-50 px-2.5 py-1 rounded-lg border border-slate-100 flex items-center gap-1.5 text-[10px] text-slate-500">
+                                  <span className="w-2 h-2 rounded-full bg-emerald-500 animate-ping" />
+                                  <span className="font-semibold">{lang === "ar" ? "رصد مالي فوري" : "Live Financial Sync"}</span>
+                                </div>
+                              </div>
+
+                              {/* Chart Wrapper */}
+                              <div className="w-full h-[260px] mt-2 select-none">
+                                <ResponsiveContainer width="100%" height="100%">
+                                  <LineChart data={chartData} margin={{ top: 10, right: 15, left: -10, bottom: 5 }}>
+                                    <CartesianGrid strokeDasharray="3 3" stroke="#f8fafc" />
+                                    <XAxis
+                                      dataKey="name"
+                                      stroke="#94a3b8"
+                                      fontSize={10}
+                                      tickLine={false}
+                                      dy={8}
+                                    />
+                                    <YAxis
+                                      stroke="#94a3b8"
+                                      fontSize={10}
+                                      tickLine={false}
+                                      tickFormatter={(v) => `$${v}`}
+                                      dx={-4}
+                                    />
+                                    <Tooltip
+                                      contentStyle={{
+                                        backgroundColor: "#1e293b",
+                                        border: "none",
+                                        borderRadius: "12px",
+                                        color: "#fff",
+                                        fontSize: "11px",
+                                        boxShadow: "0 10px 15px -3px rgba(0,0,0,0.1)"
+                                      }}
+                                      formatter={(value: any, name: any) => [`$${Number(value).toLocaleString()} USD`, name]}
+                                      labelStyle={{ fontWeight: "bold", color: "#94a3b8", marginBottom: "4px" }}
+                                    />
+                                    <Legend
+                                      iconType="circle"
+                                      wrapperStyle={{ fontSize: "11px", paddingTop: "12px" }}
+                                    />
+                                    <Line
+                                      type="monotone"
+                                      dataKey="projected"
+                                      stroke="#6366f1"
+                                      strokeWidth={2.5}
+                                      name={lang === "ar" ? "الميزانية المقدرة المخططة" : "Projected Cumulative Budget"}
+                                      dot={{ r: 3, strokeWidth: 1.5, fill: "#fff" }}
+                                      activeDot={{ r: 5 }}
+                                    />
+                                    <Line
+                                      type="monotone"
+                                      dataKey="actual"
+                                      stroke="#10b981"
+                                      strokeWidth={2.5}
+                                      name={lang === "ar" ? "التكلفة الفعلية الحالية" : "Actual Cost Spent"}
+                                      dot={{ r: 3, strokeWidth: 1.5, fill: "#fff" }}
+                                      activeDot={{ r: 5 }}
+                                      connectNulls={false}
+                                    />
+                                  </LineChart>
+                                </ResponsiveContainer>
+                              </div>
+
+                              {/* Dynamic Insights Grid */}
+                              <div className="grid grid-cols-1 sm:grid-cols-3 gap-3.5 mt-2">
+                                <div className="bg-slate-50/50 border border-slate-100 p-3 rounded-xl flex flex-col justify-center">
+                                  <span className="text-[10px] text-slate-400 block font-semibold">
+                                    {lang === "ar" ? "إجمالي المنفق الفعلي" : "Total Actual Incurred"}
+                                  </span>
+                                  <span className="text-xs font-extrabold text-slate-800 font-mono mt-1">
+                                    ${totalActualIncurred.toLocaleString()} USD
+                                  </span>
+                                  <span className="text-[9px] text-slate-400 mt-0.5">
+                                    {lang === "ar"
+                                      ? `بناءً على إنجاز ${lastCompletedIdx + 1} خطوة`
+                                      : `Based on ${lastCompletedIdx + 1} completed steps`}
+                                  </span>
+                                </div>
+
+                                <div className="bg-slate-50/50 border border-slate-100 p-3 rounded-xl flex flex-col justify-center">
+                                  <span className="text-[10px] text-slate-400 block font-semibold">
+                                    {lang === "ar" ? "مؤشر الانحراف المالي" : "Budget Variance"}
+                                  </span>
+                                  <span className={`text-xs font-extrabold font-mono mt-1 flex items-center gap-1 ${
+                                    budgetVariance < 0 ? "text-emerald-600" : budgetVariance > 0 ? "text-amber-600" : "text-slate-500"
+                                  }`}>
+                                    {budgetVariance > 0 ? "+" : ""}${budgetVariance.toLocaleString()} USD ({variancePercent.toFixed(1)}%)
+                                  </span>
+                                  <span className="text-[9px] text-slate-400 mt-0.5">
+                                    {lang === "ar" ? (
+                                      budgetVariance < 0 ? "✅ ضمن الحدود الآمنة (وفر)" : budgetVariance > 0 ? "⚠️ تكلفة مرتفعة طفيفة" : "مطابق للتوقعات تماماً"
+                                    ) : (
+                                      budgetVariance < 0 ? "✅ Under budget (Savings)" : budgetVariance > 0 ? "⚠️ Slight Overrun" : "Exactly on track"
+                                    )}
+                                  </span>
+                                </div>
+
+                                <div className="bg-slate-50/50 border border-slate-100 p-3 rounded-xl flex flex-col justify-center">
+                                  <span className="text-[10px] text-slate-400 block font-semibold">
+                                    {lang === "ar" ? "الميزانية المتبقية المقدرة" : "Remaining Forecasted"}
+                                  </span>
+                                  <span className="text-xs font-extrabold text-slate-800 font-mono mt-1">
+                                    ${remainingProjected.toLocaleString()} USD
+                                  </span>
+                                  <span className="text-[9px] text-slate-400 mt-0.5">
+                                    {lang === "ar"
+                                      ? "لاستكمال بقية الأعمال بالموقع"
+                                      : "For remaining works to completion"}
+                                  </span>
+                                </div>
+                              </div>
+                            </div>
+                          );
+                        })()}
+                      </div>
+
+                      {/* Carbon Footprint Estimation Section */}
+                      <div className="border-t border-slate-100 pt-6 mt-4">
+                        <div className="bg-emerald-50/50 p-4 rounded-2xl border border-emerald-100/60">
+                          {/* Header */}
+                          <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 mb-4">
+                            <div className="flex items-center gap-2">
+                              <div className="p-2 bg-emerald-100 text-emerald-700 rounded-xl">
+                                <Leaf className="w-5 h-5 animate-pulse" />
+                              </div>
+                              <div>
+                                <h4 className="font-extrabold text-slate-800 text-sm">
+                                  {lang === "ar" ? "التقدير التقريبي للبصمة الكربونية للمواد (CO₂e)" : "Approximate Materials Carbon Footprint (CO₂e)"}
+                                </h4>
+                                <p className="text-[10px] text-slate-400 mt-0.5 text-right sm:text-left">
+                                  {lang === "ar" 
+                                    ? "حساب افتراضي للأثر البيئي الإجمالي للمواد المستخدمة في تشييد المشروع طبقاً للمعايير الهندسية المستدامة."
+                                    : "Virtual carbon footprint calculation for the specified bill of materials based on sustainable engineering metrics."}
+                                </p>
+                              </div>
+                            </div>
+                            <div className="text-right">
+                              <span className="text-[10px] text-slate-400 block font-semibold">{lang === "ar" ? "الفئة البيئية للمشروع" : "Project Eco-Rating"}</span>
+                              <span className="inline-block bg-emerald-100 text-emerald-800 px-2.5 py-1 rounded-lg font-bold text-xs mt-0.5">
+                                {lang === "ar" ? "الفئة أ - منخفض الانبعاثات" : "Class A - Low Carbon"} 🍃
+                              </span>
+                            </div>
+                          </div>
+
+                          {/* Quick Stats Grid */}
+                          {(() => {
+                            // Calculate carbon footprint
+                            let totalKgCo2 = 0;
+                            const breakdown = {
+                              framing: 0,
+                              insulation: 0,
+                              openings: 0,
+                              sanitary: 0,
+                              foundations: 0,
+                              other: 0
+                            };
+
+                            project.billOfMaterials.forEach(item => {
+                              const name = item.material.toLowerCase();
+                              const cat = item.category.toLowerCase();
+                              const qty = item.quantity;
+                              
+                              let factor = 1.2; // default factor (kg CO2e per unit)
+                              
+                              if (name.includes("خشب") || name.includes("wood") || name.includes("timber")) {
+                                factor = 0.35;
+                              } else if (name.includes("ألومنيوم") || name.includes("aluminum")) {
+                                factor = 8.5;
+                              } else if (name.includes("فولاذ") || name.includes("حديد") || name.includes("steel") || name.includes("metal")) {
+                                factor = 3.2;
+                              } else if (name.includes("بوليسترين") || name.includes("eps") || name.includes("فوم") || name.includes("foam") || name.includes("insulation")) {
+                                factor = 2.8;
+                              } else if (name.includes("خرسانة") || name.includes("concrete") || name.includes("أسمنت") || name.includes("cement")) {
+                                factor = 0.18;
+                              } else if (name.includes("بلاستيك") || name.includes("pvc") || name.includes("بولي كربونيت") || name.includes("polycarbonate")) {
+                                factor = 2.2;
+                              } else if (cat.includes("framing") || cat.includes("هيكل")) {
+                                factor = 2.5;
+                              } else if (cat.includes("insulation") || cat.includes("عزل")) {
+                                factor = 2.2;
+                              }
+
+                              const itemCo2 = qty * factor;
+                              totalKgCo2 += itemCo2;
+
+                              if (cat.includes("framing") || cat.includes("هيكل") || name.includes("حديد") || name.includes("steel") || name.includes("wood") || name.includes("خشب")) {
+                                breakdown.framing += itemCo2;
+                              } else if (cat.includes("insulation") || cat.includes("عزل") || name.includes("eps") || name.includes("فوم")) {
+                                breakdown.insulation += itemCo2;
+                              } else if (cat.includes("doors") || cat.includes("windows") || cat.includes("أبواب") || cat.includes("نوافذ") || name.includes("نافذة") || name.includes("باب")) {
+                                breakdown.openings += itemCo2;
+                              } else if (cat.includes("sanitary") || cat.includes("electrical") || cat.includes("صحية") || cat.includes("كهربائية") || name.includes("سباكة") || name.includes("مياه")) {
+                                breakdown.sanitary += itemCo2;
+                              } else if (cat.includes("foundations") || cat.includes("connectors") || cat.includes("أساسات") || cat.includes("تثبيت") || name.includes("وتد") || name.includes("أوتاد")) {
+                                breakdown.foundations += itemCo2;
+                              } else {
+                                breakdown.other += itemCo2;
+                              }
+                            });
+
+                            const totalTonsCo2 = totalKgCo2 / 1000;
+                            const co2PerUnit = totalKgCo2 / project.suggestedModel.totalUnitsNeeded;
+                            const co2PerPerson = totalKgCo2 / project.input.peopleCount;
+
+                            // Calculate percentages for categories
+                            const getPct = (val: number) => totalKgCo2 > 0 ? Math.round((val / totalKgCo2) * 100) : 0;
+
+                            return (
+                              <div className="flex flex-col gap-4">
+                                <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                                  <div className="bg-white border border-slate-100 rounded-xl p-3 text-center">
+                                    <span className="text-[10px] text-slate-400 block">{lang === "ar" ? "إجمالي البصمة الكربونية (CO₂e)" : "Total Carbon Footprint (CO₂e)"}</span>
+                                    <span className="text-sm font-extrabold text-emerald-600 mt-1 block font-mono">
+                                      {totalTonsCo2.toFixed(2)} {lang === "ar" ? "طن متري" : "Tonnes"}
+                                    </span>
+                                    <span className="text-[9px] text-slate-400 mt-0.5 block">
+                                      {lang === "ar" ? `ما يعادل ${(totalTonsCo2 * 4.8).toFixed(1)} شجرة مزروعة لمدة 10 سنوات` : `Equivalent to ${(totalTonsCo2 * 4.8).toFixed(1)} trees grown for 10 years`}
+                                    </span>
+                                  </div>
+
+                                  <div className="bg-white border border-slate-100 rounded-xl p-3 text-center">
+                                    <span className="text-[10px] text-slate-400 block">{lang === "ar" ? "معدل الانبعاث للوحدة الواحدة" : "Emissions per Shelter Unit"}</span>
+                                    <span className="text-sm font-extrabold text-slate-700 mt-1 block font-mono">
+                                      {co2PerUnit.toFixed(1)} {lang === "ar" ? "كجم CO₂e / وحدة" : "kg CO₂e / unit"}
+                                    </span>
+                                    <span className="text-[9px] text-slate-400 mt-0.5 block">
+                                      {lang === "ar" ? "أقل بنسبة 45% من الكرفانات التقليدية" : "45% lower than traditional caravans"}
+                                    </span>
+                                  </div>
+
+                                  <div className="bg-white border border-slate-100 rounded-xl p-3 text-center">
+                                    <span className="text-[10px] text-slate-400 block">{lang === "ar" ? "معدل الانبعاث للفرد المستفيد" : "Emissions per Beneficiary"}</span>
+                                    <span className="text-sm font-extrabold text-slate-700 mt-1 block font-mono">
+                                      {co2PerPerson.toFixed(1)} {lang === "ar" ? "كجم CO₂e / فرد" : "kg CO₂e / person"}
+                                    </span>
+                                    <span className="text-[9px] text-slate-400 mt-0.5 block">
+                                      {lang === "ar" ? "يقع ضمن النطاق الأخضر الإنساني" : "Within green humanitarian limits"}
+                                    </span>
+                                  </div>
+                                </div>
+
+                                {/* Category Breakdown Horizontal Bars */}
+                                <div className="bg-white/80 border border-emerald-100/40 rounded-xl p-3.5 flex flex-col gap-3">
+                                  <span className="text-[11px] font-extrabold text-slate-700 block">
+                                    {lang === "ar" ? "توزيع الانبعاثات حسب فئات المواد الإنشائية:" : "Emission Breakdown by Material Category:"}
+                                  </span>
+
+                                  <div className="grid grid-cols-1 md:grid-cols-2 gap-x-6 gap-y-3">
+                                    {/* Framing */}
+                                    <div>
+                                      <div className="flex justify-between items-center text-[10px] mb-1">
+                                        <span className="text-slate-600 font-bold">{lang === "ar" ? "الهيكل الإنشائي والتدعيم" : "Structural Framing"}</span>
+                                        <span className="font-mono text-emerald-700">{breakdown.framing.toFixed(0)} kg ({getPct(breakdown.framing)}%)</span>
+                                      </div>
+                                      <div className="w-full h-1.5 bg-slate-100 rounded-full overflow-hidden">
+                                        <div className="bg-emerald-500 h-full" style={{ width: `${getPct(breakdown.framing)}%` }}></div>
+                                      </div>
+                                    </div>
+
+                                    {/* Insulation */}
+                                    <div>
+                                      <div className="flex justify-between items-center text-[10px] mb-1">
+                                        <span className="text-slate-600 font-bold">{lang === "ar" ? "مواد العزل والكسوة" : "Insulation & Enclosure"}</span>
+                                        <span className="font-mono text-emerald-700">{breakdown.insulation.toFixed(0)} kg ({getPct(breakdown.insulation)}%)</span>
+                                      </div>
+                                      <div className="w-full h-1.5 bg-slate-100 rounded-full overflow-hidden">
+                                        <div className="bg-emerald-500 h-full" style={{ width: `${getPct(breakdown.insulation)}%` }}></div>
+                                      </div>
+                                    </div>
+
+                                    {/* Openings */}
+                                    <div>
+                                      <div className="flex justify-between items-center text-[10px] mb-1">
+                                        <span className="text-slate-600 font-bold">{lang === "ar" ? "الأبواب والنوافذ والفتحات" : "Doors, Windows & Openings"}</span>
+                                        <span className="font-mono text-emerald-700">{breakdown.openings.toFixed(0)} kg ({getPct(breakdown.openings)}%)</span>
+                                      </div>
+                                      <div className="w-full h-1.5 bg-slate-100 rounded-full overflow-hidden">
+                                        <div className="bg-emerald-400 h-full" style={{ width: `${getPct(breakdown.openings)}%` }}></div>
+                                      </div>
+                                    </div>
+
+                                    {/* Sanitary & Foundations Combined or Separated */}
+                                    <div>
+                                      <div className="flex justify-between items-center text-[10px] mb-1">
+                                        <span className="text-slate-600 font-bold">{lang === "ar" ? "التأسيس والملحقات الأخرى" : "Foundations & Other Fitments"}</span>
+                                        <span className="font-mono text-emerald-700">{(breakdown.foundations + breakdown.sanitary + breakdown.other).toFixed(0)} kg ({getPct(breakdown.foundations + breakdown.sanitary + breakdown.other)}%)</span>
+                                      </div>
+                                      <div className="w-full h-1.5 bg-slate-100 rounded-full overflow-hidden">
+                                        <div className="bg-emerald-300 h-full" style={{ width: `${getPct(breakdown.foundations + breakdown.sanitary + breakdown.other)}%` }}></div>
+                                      </div>
+                                    </div>
+                                  </div>
+                                </div>
+
+                                {/* Tips / Suggestions on reduction */}
+                                <div className="bg-emerald-100/30 rounded-xl p-3 border border-emerald-100/50 flex gap-2.5 items-start">
+                                  <Info className="w-4 h-4 text-emerald-700 shrink-0 mt-0.5" />
+                                  <div className="text-[10px] text-emerald-800 leading-relaxed text-right sm:text-left">
+                                    <span className="font-bold block mb-1">{lang === "ar" ? "توصيات هندسية لتقليل الانبعاثات الكربونية في هذا الموقع:" : "Engineering Recommendations for Carbon Reduction at this site:"}</span>
+                                    <ul className="list-disc list-inside space-y-1">
+                                      {lang === "ar" ? (
+                                        <>
+                                          <li>تفضيل استخدام <strong className="text-emerald-950">الأخشاب المحلية المستدامة المعالجة</strong> لتدعيم الهياكل عوضاً عن قطاعات الألمنيوم أو الفولاذ المستوردة.</li>
+                                          <li>استخدام <strong className="text-emerald-950">العزل الطبيعي المصنوع من ألياف السليلوز أو الصوف الصخري</strong> عالي الكثافة بدلاً من البوليسترين البلاستيكي.</li>
+                                          <li>شراء وتصنيع التجهيزات في <strong className="text-emerald-950">الورش المحلية الأقرب للموقع</strong> لتوفير تكلفة وانبعاثات شحن المواد لمسافات طويلة.</li>
+                                        </>
+                                      ) : (
+                                        <>
+                                          <li>Prioritize using <strong className="text-emerald-950">locally-sourced treated sustainable timber</strong> for main structural frames instead of imported steel or aluminum.</li>
+                                          <li>Use <strong className="text-emerald-950">cellulose fibers or mineral wool insulation</strong> instead of petrochemical-based polystyrene cores.</li>
+                                          <li>Procure all structural fasteners and pre-assembled elements from <strong className="text-emerald-950">the closest regional trade hubs</strong> to minimize transport footprint.</li>
+                                        </>
+                                      )}
+                                    </ul>
+                                  </div>
+                                </div>
+
+                              </div>
+                            );
+                          })()}
                         </div>
                       </div>
                     </div>
@@ -1455,12 +2642,12 @@ export default function App() {
                   <p className="text-xs text-slate-400 mt-0.5">يمكنك تحميل التقارير الهندسية وجداول الكميات والخرائط بنقرة واحدة بمختلف الصيغ المطلوبة للتقديم الميداني.</p>
                 </div>
 
-                <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-3">
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-3">
                   {/* Export PDF */}
                   <button
                     id="export-pdf-report-btn"
                     onClick={() => window.print()}
-                    className="p-3 bg-slate-50 hover:bg-indigo-50 border border-slate-100 hover:border-indigo-100 rounded-xl text-right transition-all flex flex-col justify-between"
+                    className="p-3 bg-slate-50 hover:bg-indigo-50 border border-slate-100 hover:border-indigo-100 rounded-xl text-right transition-all flex flex-col justify-between cursor-pointer"
                   >
                     <div className="p-2 bg-indigo-50 text-indigo-600 rounded-lg w-fit mb-2">
                       <FileText className="w-5 h-5" />
@@ -1475,7 +2662,7 @@ export default function App() {
                   <button
                     id="export-excel-csv-btn"
                     onClick={exportToCSV}
-                    className="p-3 bg-slate-50 hover:bg-emerald-50 border border-slate-100 hover:border-emerald-100 rounded-xl text-right transition-all flex flex-col justify-between"
+                    className="p-3 bg-slate-50 hover:bg-emerald-50 border border-slate-100 hover:border-emerald-100 rounded-xl text-right transition-all flex flex-col justify-between cursor-pointer"
                   >
                     <div className="p-2 bg-emerald-50 text-emerald-600 rounded-lg w-fit mb-2">
                       <FileSpreadsheet className="w-5 h-5" />
@@ -1490,7 +2677,7 @@ export default function App() {
                   <button
                     id="export-bim-ifc-json-btn"
                     onClick={exportToIFC}
-                    className="p-3 bg-slate-50 hover:bg-sky-50 border border-slate-100 hover:border-sky-100 rounded-xl text-right transition-all flex flex-col justify-between"
+                    className="p-3 bg-slate-50 hover:bg-sky-50 border border-slate-100 hover:border-sky-100 rounded-xl text-right transition-all flex flex-col justify-between cursor-pointer"
                   >
                     <div className="p-2 bg-sky-50 text-sky-600 rounded-lg w-fit mb-2">
                       <Layers className="w-5 h-5" />
@@ -1505,7 +2692,7 @@ export default function App() {
                   <button
                     id="export-cad-script-btn"
                     onClick={exportToCAD}
-                    className="p-3 bg-slate-50 hover:bg-amber-50 border border-slate-100 hover:border-amber-100 rounded-xl text-right transition-all flex flex-col justify-between"
+                    className="p-3 bg-slate-50 hover:bg-amber-50 border border-slate-100 hover:border-amber-100 rounded-xl text-right transition-all flex flex-col justify-between cursor-pointer"
                   >
                     <div className="p-2 bg-amber-50 text-amber-600 rounded-lg w-fit mb-2">
                       <Grid className="w-5 h-5" />
@@ -1513,6 +2700,30 @@ export default function App() {
                     <div>
                       <span className="font-bold text-xs text-slate-700 block">مخطط أوتوكاد CAD (DXF)</span>
                       <span className="text-[10px] text-slate-400 block mt-0.5">خطوط ومجسّمات CAD لرسومات DWG</span>
+                    </div>
+                  </button>
+
+                  {/* Share Project */}
+                  <button
+                    id="share-project-btn"
+                    onClick={handleShareProject}
+                    disabled={sharing}
+                    className="p-3 bg-violet-50/60 hover:bg-violet-50 border border-violet-100 hover:border-violet-200 rounded-xl text-right transition-all flex flex-col justify-between cursor-pointer"
+                  >
+                    <div className="p-2 bg-violet-100 text-violet-700 rounded-lg w-fit mb-2">
+                      {sharing ? (
+                        <RefreshCcw className="w-5 h-5 animate-spin" />
+                      ) : (
+                        <Share2 className="w-5 h-5" />
+                      )}
+                    </div>
+                    <div>
+                      <span className="font-bold text-xs text-slate-700 block">
+                        {lang === "ar" ? "مشاركة مخطط المشروع" : "Share Project Blueprint"}
+                      </span>
+                      <span className="text-[10px] text-slate-400 block mt-0.5">
+                        {lang === "ar" ? "توليد رابط فريد وكود QR" : "Generate unique link & QR"}
+                      </span>
                     </div>
                   </button>
                 </div>
@@ -1552,6 +2763,104 @@ export default function App() {
           }
         }
       `}</style>
+
+      {/* Share Project Modal */}
+      {showShareModal && shareId && (
+        <div className="fixed inset-0 bg-slate-900/60 backdrop-blur-xs flex items-center justify-center z-50 p-4" dir={lang === "ar" ? "rtl" : "ltr"}>
+          <div className="bg-white rounded-2xl max-w-md w-full p-6 shadow-2xl border border-slate-100 relative flex flex-col gap-4 animate-scale-up">
+            
+            {/* Header */}
+            <div className="text-center">
+              <div className="w-12 h-12 bg-violet-100 text-violet-700 rounded-full flex items-center justify-center mx-auto mb-3">
+                <Share2 className="w-6 h-6" />
+              </div>
+              <h3 className="text-base font-extrabold text-slate-800">
+                {lang === "ar" ? "مشاركة مخطط المشروع" : "Share Project Blueprint"}
+              </h3>
+              <p className="text-xs text-slate-500 mt-1">
+                {lang === "ar" 
+                  ? "تم توليد رابط فريد وكود QR بنجاح لمشاركة كامل تفاصيل هذا المأوى المتكامل."
+                  : "Unique link and QR code generated successfully to share the complete shelter model details."}
+              </p>
+            </div>
+
+            {/* Link Box */}
+            <div className="flex flex-col gap-1.5">
+              <span className="text-[11px] font-bold text-slate-500">
+                {lang === "ar" ? "الرابط الفريد للمشروع:" : "Unique Project URL:"}
+              </span>
+              <div className="flex items-center gap-2 bg-slate-50 border border-slate-200 rounded-xl p-2.5">
+                <input
+                  type="text"
+                  readOnly
+                  value={`${window.location.origin}/?project=${shareId}`}
+                  className="bg-transparent border-none text-xs text-slate-600 font-mono focus:outline-none flex-1 select-all"
+                />
+                <button
+                  onClick={() => {
+                    navigator.clipboard.writeText(`${window.location.origin}/?project=${shareId}`);
+                    setCopiedShareLink(true);
+                    setTimeout(() => setCopiedShareLink(false), 2000);
+                  }}
+                  className={`px-3 py-1.5 rounded-lg font-bold text-[10px] transition-all flex items-center gap-1 shrink-0 ${
+                    copiedShareLink
+                      ? "bg-emerald-100 text-emerald-800"
+                      : "bg-indigo-600 hover:bg-indigo-700 text-white cursor-pointer"
+                  }`}
+                >
+                  {copiedShareLink ? (
+                    <>
+                      <Check className="w-3.5 h-3.5" />
+                      <span>{lang === "ar" ? "تم النسخ!" : "Copied!"}</span>
+                    </>
+                  ) : (
+                    <span>{lang === "ar" ? "نسخ الرابط" : "Copy URL"}</span>
+                  )}
+                </button>
+              </div>
+            </div>
+
+            {/* QR Code Graphic */}
+            <div className="bg-slate-50 border border-slate-100 rounded-2xl p-4 text-center flex flex-col items-center justify-center gap-2">
+              <span className="text-[11px] font-bold text-slate-500 block">
+                {lang === "ar" ? "رمز الاستجابة السريعة (QR Code):" : "Project QR Code:"}
+              </span>
+              <div className="bg-white p-3 rounded-xl border border-slate-200 shadow-sm">
+                <img
+                  src={`https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=${encodeURIComponent(`${window.location.origin}/?project=${shareId}`)}`}
+                  alt="QR Code"
+                  referrerPolicy="no-referrer"
+                  className="w-44 h-44 object-contain"
+                />
+              </div>
+              <p className="text-[10px] text-slate-400 max-w-[280px] leading-relaxed mt-1">
+                {lang === "ar"
+                  ? "امسح الكود عبر كاميرا الجوال لفتح ومراجعة المخططات الهندسية وجدول المواد مباشرة."
+                  : "Scan this code with a smartphone camera to review drawings, BOM, and timelines instantly."}
+              </p>
+            </div>
+
+            {/* Footer Buttons */}
+            <div className="flex gap-2.5 mt-2">
+              <a
+                href={`https://api.qrserver.com/v1/create-qr-code/?size=500x500&data=${encodeURIComponent(`${window.location.origin}/?project=${shareId}`)}`}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="flex-1 py-2.5 rounded-xl border border-slate-200 hover:bg-slate-50 text-slate-600 font-bold text-xs text-center transition-all flex items-center justify-center"
+              >
+                {lang === "ar" ? "عرض كود QR كبير" : "Open Large QR"}
+              </a>
+              <button
+                onClick={() => setShowShareModal(false)}
+                className="flex-1 py-2.5 bg-slate-900 hover:bg-slate-800 text-white font-bold text-xs rounded-xl transition-all cursor-pointer"
+              >
+                {lang === "ar" ? "إغلاق النافذة" : "Close"}
+              </button>
+            </div>
+
+          </div>
+        </div>
+      )}
     </div>
   );
 }

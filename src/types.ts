@@ -75,6 +75,7 @@ export interface TimelineStep {
   dependencyStep?: string;
   workersRequired: number;
   instructions: string;
+  completed?: boolean;
 }
 
 export interface BudgetBreakdown {
@@ -83,6 +84,25 @@ export interface BudgetBreakdown {
   transportCost: number;
   contingencyCost: number;
   totalCost: number;
+}
+
+export interface RiskFactor {
+  name: string;
+  value: string;
+  riskLevel: 'low' | 'medium' | 'high';
+  description: string;
+}
+
+export interface SiteRiskAssessment {
+  safetyScore: number;
+  windDirection: RiskFactor;
+  floodProbability: RiskFactor;
+  landslideRisk: RiskFactor;
+  earthquakeIntensity: RiskFactor;
+  seasonalTemperature: RiskFactor;
+  groundwaterLevel: RiskFactor;
+  torrentProximity: RiskFactor;
+  recommendations: string[];
 }
 
 export interface ShelterProject {
@@ -109,4 +129,5 @@ export interface ShelterProject {
   billOfMaterials: BOMItem[];
   timeline: TimelineStep[];
   budget: BudgetBreakdown;
+  siteRiskAssessment?: SiteRiskAssessment;
 }
