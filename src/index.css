@@ -13,3 +13,20 @@ body {
   color: #0f172a;
 }
 
+/* Leaflet Tooltip custom overrides */
+.custom-unit-tooltip {
+  background-color: #0f172a !important; /* slate-900 */
+  color: #ffffff !important;
+  border: 1px solid rgba(51, 65, 85, 0.5) !important; /* slate-700/50 */
+  font-family: var(--font-mono) !important;
+  font-size: 9px !important;
+  font-weight: 700 !important;
+  padding: 2px 6px !important;
+  border-radius: 4px !important;
+  box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1) !important;
+}
+
+.custom-unit-tooltip::before {
+  display: none !important; /* Hide default leaflet tooltip arrow */
+}
+

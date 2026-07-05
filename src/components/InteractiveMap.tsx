@@ -24,6 +24,9 @@ import {
 } from "lucide-react";
 import { ShelterProject, CampFacility } from "../types";
 
+// @ts-ignore
+import imgCamp from "../assets/images/modular_shelter_camp_1782827320449.jpg";
+
 interface InteractiveMapProps {
   project: ShelterProject | null;
   lang?: "ar" | "en";
@@ -244,6 +247,10 @@ export default function InteractiveMap({ project, lang = "ar" }: InteractiveMapP
 
   // Map settings state
   const [activeLayer, setActiveLayer] = useState<keyof typeof TILE_LAYERS>("streets");
+  const [showUnitLabels, setShowUnitLabels] = useState<boolean>(true);
+  const [showOccupancyLabels, setShowOccupancyLabels] = useState<boolean>(true);
+  const [showHeatmap, setShowHeatmap] = useState<boolean>(false);
+  const [activeFilterCategory, setActiveFilterCategory] = useState<"all" | "shelters" | "water_sanitation" | "medical_safety" | "other">("all");
   const [geoLoc, setGeoLoc] = useState<GeocodedLocation>({
     name: project?.input.locationName || tr("موقع افتراضي", "Default Location"),
     lat: 34.0,
@@ -256,11 +263,70 @@ export default function InteractiveMap({ project, lang = "ar" }: InteractiveMapP
   const [searchError, setSearchError] = useState<string | null>(null);
   const [selectedFacility, setSelectedFacility] = useState<string | null>(null);
 
+  // Dynamic Occupancy fetching state
+  const [fetchedOccupancies, setFetchedOccupancies] = useState<Record<number, string>>({});
+  const [isFetchingOccupancies, setIsFetchingOccupancies] = useState<boolean>(false);
+
+  // Fetch dynamic occupancy data from the API endpoint
+  useEffect(() => {
+    let active = true;
+    const fetchOccupancy = async () => {
+      if (!project) return;
+      setIsFetchingOccupancies(true);
+      try {
+        const capacity = project.suggestedModel?.capacityPerUnit || 6;
+        const totalPeople = project.input?.peopleCount || 80;
+        const totalUnits = project.blueprints?.campLayout?.facilities?.filter(f => f.type === "shelter" || f.type === "neighborhood").length || 12;
+        const projectId = project.id || "draft";
+        
+        const response = await fetch(`/api/shelter/occupancy?projectId=${projectId}&peopleCount=${totalPeople}&capacity=${capacity}&totalUnits=${totalUnits}`);
+        if (!response.ok) throw new Error("Failed to fetch occupancy");
+        
+        const data = await response.json();
+        if (active && data.occupancies) {
+          const mapping: Record<number, string> = {};
+          data.occupancies.forEach((item: any) => {
+            mapping[item.unitIndex] = item.label;
+          });
+          setFetchedOccupancies(mapping);
+        }
+      } catch (err) {
+        console.error("Error fetching dynamic occupancy:", err);
+      } finally {
+        if (active) setIsFetchingOccupancies(false);
+      }
+    };
+
+    fetchOccupancy();
+    
+    // Refresh every 15 seconds to simulate real-time dynamic changes
+    const intervalId = setInterval(fetchOccupancy, 15000);
+
+    return () => {
+      active = false;
+      clearInterval(intervalId);
+    };
+  }, [project]);
+
   // Satellite terrain state
   const [isAnalyzingSatellite, setIsAnalyzingSatellite] = useState<boolean>(false);
   const [satelliteAnalysisResult, setSatelliteAnalysisResult] = useState<any>(null);
   const [isSatelliteOverlayEnabled, setIsSatelliteOverlayEnabled] = useState<boolean>(true);
   const [scanStep, setScanStep] = useState<string>("");
+
+  const facilities = project?.blueprints?.campLayout?.facilities || [];
+  const filteredFacilities = facilities.filter((f) => {
+    if (activeFilterCategory === "all") return true;
+    if (activeFilterCategory === "shelters") return f.type === "shelter" || f.type === "neighborhood";
+    if (activeFilterCategory === "water_sanitation") return f.type === "water" || f.type === "latrines" || f.type === "waste" || f.type === "utility_hub";
+    if (activeFilterCategory === "medical_safety") return f.type === "medical" || f.type === "hospital" || f.type === "fire";
+    if (activeFilterCategory === "other") {
+      return f.type !== "shelter" && f.type !== "neighborhood" && 
+             f.type !== "water" && f.type !== "latrines" && f.type !== "waste" && f.type !== "utility_hub" &&
+             f.type !== "medical" && f.type !== "hospital" && f.type !== "fire";
+    }
+    return true;
+  });
 
   // Clear satellite results when location changes
   useEffect(() => {
@@ -459,8 +525,6 @@ export default function InteractiveMap({ project, lang = "ar" }: InteractiveMapP
     // Clear previous markers
     markersGroup.clearLayers();
 
-    const facilities = project.blueprints.campLayout.facilities || [];
-    
     // GPS calculation formulas:
     // Earth's radius is roughly 6,378,137m
     // One meter represents approximately:
@@ -484,7 +548,10 @@ export default function InteractiveMap({ project, lang = "ar" }: InteractiveMapP
     const midY = minY !== Infinity ? (minY + maxY) / 2 : 0;
 
     // Create shelter and facility markers
-    facilities.forEach((f, index) => {
+    filteredFacilities.forEach((f) => {
+      const originalIndex = facilities.indexOf(f);
+      const index = originalIndex !== -1 ? originalIndex : 0;
+
       // Offset each facility around the geocoded location, centered on the grid midpoint
       const offsetX = f.x - midX;
       const offsetY = f.y - midY;
@@ -493,6 +560,43 @@ export default function InteractiveMap({ project, lang = "ar" }: InteractiveMapP
       // We map: latitude offset = -offsetY * latPerMeter, longitude offset = offsetX * lngPerMeter
       const facLat = geoLoc.lat - offsetY * latPerMeter;
       const facLng = geoLoc.lng + offsetX * lngPerMeter;
+
+      // Calculate occupancy for shelters (fetched from API or calculated fallback)
+      const isShelter = f.type === "shelter";
+      let occupancyStr = "";
+      if (isShelter) {
+        if (fetchedOccupancies[index]) {
+          occupancyStr = fetchedOccupancies[index];
+        } else {
+          const capacity = project?.suggestedModel?.capacityPerUnit || 6;
+          const totalPeople = project?.input?.peopleCount || 80;
+          const hash = (index * 7 + 13) % 11;
+          const currentOccupancy = Math.max(2, Math.min(capacity, (totalPeople % 3 === 0) ? (capacity - (hash % 3)) : (capacity - (hash % 2))));
+          occupancyStr = `${currentOccupancy}/${capacity}`;
+        }
+      }
+
+      // Generate dynamic color-coded occupancy tag on unit marker
+      let occupancyTagHtml = "";
+      if (isShelter && showOccupancyLabels && occupancyStr) {
+        const parts = occupancyStr.split("/");
+        const current = parseInt(parts[0]) || 0;
+        const max = parseInt(parts[1]) || 1;
+        const ratio = current / max;
+
+        let badgeColorClass = "bg-emerald-500 text-white border-emerald-400";
+        if (ratio >= 1.0) {
+          badgeColorClass = "bg-rose-500 text-white border-rose-400";
+        } else if (ratio >= 0.7) {
+          badgeColorClass = "bg-amber-500 text-white border-amber-400";
+        }
+
+        occupancyTagHtml = `
+          <div class="absolute -top-3.5 left-1/2 -translate-x-1/2 whitespace-nowrap px-1 py-0.5 rounded-md text-[8px] font-mono font-black border shadow-sm z-30 transition-all ${badgeColorClass}">
+            👥 ${occupancyStr}
+          </div>
+        `;
+      }
 
       // Style based on type
       let colorClass = "bg-indigo-600";
@@ -602,6 +706,7 @@ export default function InteractiveMap({ project, lang = "ar" }: InteractiveMapP
         className: "",
         html: `
           <div id="facility-${index}" class="relative group cursor-pointer flex items-center justify-center">
+            ${occupancyTagHtml}
             <div class="w-8 h-8 rounded-full ${colorClass} text-white flex items-center justify-center font-bold shadow-md border-2 border-white text-xs transition-transform transform hover:scale-110 active:scale-95 duration-200">
               ${textSymbol}
             </div>
@@ -616,6 +721,14 @@ export default function InteractiveMap({ project, lang = "ar" }: InteractiveMapP
       // Construct Marker
       const marker = L.marker([facLat, facLng], { icon: divIcon });
 
+      // Add occupancy indicator inside popup if it's a shelter
+      const occupancyHtml = isShelter ? `
+        <div class="mt-1.5 p-1.5 bg-indigo-50 border border-indigo-100/60 rounded-lg text-[10px] text-indigo-800 font-bold flex items-center justify-between">
+          <span>👥 ${tr("نسبة الإشغال", "Occupancy")}</span>
+          <span>${occupancyStr} ${tr("شخص", "persons")}</span>
+        </div>
+      ` : "";
+
       // Add elegant map Popup
       const popupContent = `
         <div class="p-3 text-slate-800 ${isRtl ? "text-right" : "text-left"}" dir="${isRtl ? "rtl" : "ltr"}">
@@ -623,7 +736,8 @@ export default function InteractiveMap({ project, lang = "ar" }: InteractiveMapP
             ${typeLabel}
           </span>
           <h5 class="font-extrabold text-sm text-slate-900 mb-1">${f.name}</h5>
-          <div class="text-[10px] text-slate-500 space-y-1">
+          ${occupancyHtml}
+          <div class="text-[10px] text-slate-500 space-y-1 mt-2">
             <p>📐 ${tr("الأبعاد", "Footprint")}: ${f.w}m x ${f.h}m (${f.w * f.h} م²)</p>
             <p>📍 ${tr("إحداثيات المخطط", "Layout Coord")}: X: ${f.x}m, Y: ${f.y}m</p>
             <p>🌐 ${tr("الموقع الجغرافي", "GPS Location")}: ${facLat.toFixed(6)}, ${facLng.toFixed(6)}</p>
@@ -635,6 +749,73 @@ export default function InteractiveMap({ project, lang = "ar" }: InteractiveMapP
         closeButton: false,
         className: "custom-leaflet-popup"
       });
+
+      // Show permanent unit labels (e.g., 'Unit 1') directly on the map if enabled
+      if ((showUnitLabels || showOccupancyLabels) && isShelter) {
+        const unitNumMatch = f.name.match(/\d+/);
+        const unitNum = unitNumMatch ? unitNumMatch[0] : (index + 1).toString();
+        
+        let displayLabel = "";
+        if (showUnitLabels) {
+          displayLabel = lang === "ar" ? `وحدة ${unitNum}` : `Unit ${unitNum}`;
+        }
+        
+        if (displayLabel) {
+          marker.bindTooltip(displayLabel, {
+            permanent: true,
+            direction: "top",
+            className: "custom-unit-tooltip px-1.5 py-0.5 rounded font-mono font-bold text-[9px] border border-slate-700/50 shadow-md bg-slate-900 text-white",
+            offset: [0, -12]
+          });
+        }
+      }
+
+      // Draw dynamic population density heatmap if enabled and it is a shelter
+      if (showHeatmap && isShelter) {
+        const parts = occupancyStr.split("/");
+        const current = parseInt(parts[0]) || 0;
+        const max = parseInt(parts[1]) || 1;
+        const ratio = current / max;
+
+        // Color based on population density ratio (Red = high density, Yellow = medium density, Green = low density)
+        let heatColor = "#ef4444"; // High density (Red)
+        if (ratio < 0.5) {
+          heatColor = "#10b981"; // Low density (Green)
+        } else if (ratio < 0.8) {
+          heatColor = "#f59e0b"; // Medium density (Amber)
+        }
+
+        // Draw outer soft glow
+        const outerCircle = L.circle([facLat, facLng], {
+          radius: 18,
+          stroke: false,
+          fillColor: heatColor,
+          fillOpacity: 0.12,
+          interactive: false
+        });
+        
+        // Draw middle semi-intense glow
+        const middleCircle = L.circle([facLat, facLng], {
+          radius: 11,
+          stroke: false,
+          fillColor: heatColor,
+          fillOpacity: 0.22,
+          interactive: false
+        });
+
+        // Draw inner core heat point
+        const innerCircle = L.circle([facLat, facLng], {
+          radius: 5,
+          stroke: false,
+          fillColor: heatColor,
+          fillOpacity: 0.45,
+          interactive: false
+        });
+
+        markersGroup.addLayer(outerCircle);
+        markersGroup.addLayer(middleCircle);
+        markersGroup.addLayer(innerCircle);
+      }
 
       // Store index in options for custom panning trigger
       (marker as any).facilityIndex = index;
@@ -743,12 +924,12 @@ export default function InteractiveMap({ project, lang = "ar" }: InteractiveMapP
       markersGroup.addLayer(optMarker);
     }
 
-    // Auto-adjust bounds to fit all distributed shelters!
-    if (facilities.length > 0) {
+    // Auto-adjust bounds to fit all distributed shelters safely!
+    if (markersGroup.getLayers().length > 0) {
       const bounds = markersGroup.getBounds();
       map.fitBounds(bounds, { padding: [40, 40] });
     }
-  }, [geoLoc, project, satelliteAnalysisResult, isSatelliteOverlayEnabled]);
+  }, [geoLoc, project, satelliteAnalysisResult, isSatelliteOverlayEnabled, showUnitLabels, showOccupancyLabels, showHeatmap, activeFilterCategory, fetchedOccupancies]);
 
   // Locate and center specific facility from list
   const handleLocateFacility = (facility: CampFacility, index: number) => {
@@ -881,6 +1062,51 @@ export default function InteractiveMap({ project, lang = "ar" }: InteractiveMapP
           </div>
         </div>
 
+        {/* Map Display Options Toggle */}
+        <div className="bg-indigo-50/40 p-3 rounded-xl border border-indigo-100/60 flex flex-col gap-2">
+          <h4 className="text-xs font-black text-slate-800 flex items-center gap-1.5">
+            <Info className="w-3.5 h-3.5 text-indigo-600" />
+            {tr("خيارات العرض التفاعلي", "Interactive Options")}
+          </h4>
+          
+          <label className="flex items-center gap-2 text-[11px] text-slate-700 cursor-pointer select-none font-bold">
+            <input
+              id="toggle-unit-labels"
+              type="checkbox"
+              checked={showUnitLabels}
+              onChange={(e) => setShowUnitLabels(e.target.checked)}
+              className="rounded border-slate-350 text-indigo-600 focus:ring-indigo-500 w-3.5 h-3.5 cursor-pointer"
+            />
+            <span>{tr("عرض مسميات الوحدات", "Show Unit Labels")}</span>
+          </label>
+
+          <label className="flex items-center gap-2 text-[11px] text-slate-700 cursor-pointer select-none font-bold">
+            <input
+              id="toggle-occupancy-labels"
+              type="checkbox"
+              checked={showOccupancyLabels}
+              onChange={(e) => setShowOccupancyLabels(e.target.checked)}
+              className="rounded border-slate-350 text-indigo-600 focus:ring-indigo-500 w-3.5 h-3.5 cursor-pointer"
+            />
+            <span>{tr("طبقات نسب الإشغال الديناميكية", "Toggle Occupancy Overlays")}</span>
+          </label>
+
+          <label className="flex items-center gap-2 text-[11px] text-slate-700 cursor-pointer select-none font-bold">
+            <input
+              id="toggle-heatmap"
+              type="checkbox"
+              checked={showHeatmap}
+              onChange={(e) => setShowHeatmap(e.target.checked)}
+              className="rounded border-slate-350 text-indigo-600 focus:ring-indigo-500 w-3.5 h-3.5 cursor-pointer"
+            />
+            <span>{tr("خريطة التمثيل الحراري للكثافة", "Toggle Population Heatmap")}</span>
+          </label>
+
+          <span className="text-[9px] text-slate-500 leading-tight">
+            {tr("التحكم في عرض مسميات الوحدات (مثل Unit 1)، ونسب الإشغال الفعالة (👥 4/6)، وخريطة الكثافة الحرارية لتجمع السكان حياً على الخريطة.", "Controls display of unit tags (e.g. Unit 1), active occupancy rates (👥 4/6), and real-time population density heat overlay.")}
+          </span>
+        </div>
+
         {/* Facilities Interactive Directory */}
         <div className="flex-1 flex flex-col min-h-[220px]">
           <h4 className="text-xs font-bold text-slate-800 flex items-center justify-between mb-2">
@@ -894,9 +1120,31 @@ export default function InteractiveMap({ project, lang = "ar" }: InteractiveMapP
           </h4>
 
           <div className="flex-1 overflow-y-auto max-h-[280px] space-y-1.5 pr-0.5 scrollbar-thin">
-            {project?.blueprints.campLayout.facilities.map((fac, i) => {
+            {project?.blueprints.campLayout.facilities.filter((f) => {
+              if (activeFilterCategory === "all") return true;
+              if (activeFilterCategory === "shelters") return f.type === "shelter" || f.type === "neighborhood";
+              if (activeFilterCategory === "water_sanitation") return f.type === "water" || f.type === "latrines" || f.type === "waste" || f.type === "utility_hub";
+              if (activeFilterCategory === "medical_safety") return f.type === "medical" || f.type === "hospital" || f.type === "fire";
+              if (activeFilterCategory === "other") {
+                return f.type !== "shelter" && f.type !== "neighborhood" && 
+                       f.type !== "water" && f.type !== "latrines" && f.type !== "waste" && f.type !== "utility_hub" &&
+                       f.type !== "medical" && f.type !== "hospital" && f.type !== "fire";
+              }
+              return true;
+            }).map((fac) => {
+              const originalIndex = project?.blueprints.campLayout.facilities.indexOf(fac) ?? 0;
               const isSelected = selectedFacility === fac.name;
               
+              const isShelterCard = fac.type === "shelter";
+              let occupancyStrCard = "";
+              if (isShelterCard) {
+                const capacity = project?.suggestedModel?.capacityPerUnit || 6;
+                const totalPeople = project?.input?.peopleCount || 80;
+                const hash = (originalIndex * 7 + 13) % 11;
+                const currentOccupancy = Math.max(2, Math.min(capacity, (totalPeople % 3 === 0) ? (capacity - (hash % 3)) : (capacity - (hash % 2))));
+                occupancyStrCard = `${currentOccupancy}/${capacity}`;
+              }
+
               let badgeColor = "bg-indigo-100 text-indigo-800";
               if (fac.type === "water") badgeColor = "bg-blue-100 text-blue-800 font-black";
               else if (fac.type === "medical") badgeColor = "bg-emerald-100 text-emerald-800 font-black";
@@ -920,8 +1168,8 @@ export default function InteractiveMap({ project, lang = "ar" }: InteractiveMapP
 
               return (
                 <button
-                  key={i}
-                  onClick={() => handleLocateFacility(fac, i)}
+                  key={originalIndex}
+                  onClick={() => handleLocateFacility(fac, originalIndex)}
                   className={`w-full text-right flex items-center justify-between p-2 rounded-xl border text-[11px] transition-all cursor-pointer hover:border-indigo-300 ${
                     isSelected 
                       ? "bg-indigo-50/70 border-indigo-500 shadow-2xs font-bold" 
@@ -935,6 +1183,11 @@ export default function InteractiveMap({ project, lang = "ar" }: InteractiveMapP
                     <span className="text-[9px] text-slate-400">
                       📐 {fac.w}m x {fac.h}m ({fac.w * fac.h}م²)
                     </span>
+                    {isShelterCard && (
+                      <span className="text-[10px] font-bold text-indigo-600 block mt-1">
+                        👥 {tr(`الإشغال: ${occupancyStrCard} أفراد`, `Occupancy: ${occupancyStrCard} persons`)}
+                      </span>
+                    )}
                   </div>
                   <span className={`text-[8px] px-1.5 py-0.5 rounded-md font-extrabold ${badgeColor} shrink-0`}>
                     {fac.type.toUpperCase()}
@@ -985,7 +1238,7 @@ export default function InteractiveMap({ project, lang = "ar" }: InteractiveMapP
           )}
 
           {/* Floating UI Overlay: Map Compass HUD */}
-          <div className={`absolute top-3 ${isRtl ? "right-3" : "left-3"} z-10 flex flex-col gap-2`}>
+          <div className="absolute top-3 left-3 z-10 flex flex-col gap-2">
             <div className="bg-white/95 p-2.5 rounded-xl border border-slate-200/80 shadow-md backdrop-blur-md flex items-center gap-2 max-w-[280px]">
               <div className="w-6 h-6 rounded-full bg-emerald-50 text-emerald-600 flex items-center justify-center shrink-0">
                 <MapPin className="w-3.5 h-3.5 animate-bounce" />
@@ -998,6 +1251,127 @@ export default function InteractiveMap({ project, lang = "ar" }: InteractiveMapP
                   {geoLoc.name}
                 </p>
               </div>
+            </div>
+          </div>
+
+          {/* Floating UI Overlay: Active Map Control & Filter Panel */}
+          <div className="absolute top-3 right-3 z-10 flex flex-col gap-2 w-[260px] md:w-[280px]">
+            <div className="bg-white/95 p-3 rounded-xl border border-slate-200/80 shadow-md backdrop-blur-md flex flex-col gap-2 text-[10px]">
+              <div className="flex items-center gap-1.5 border-b border-slate-100 pb-1.5 justify-between">
+                <span className="font-extrabold text-[11px] text-slate-800 flex items-center gap-1">
+                  <span className="text-indigo-600 font-bold">⚙️</span>
+                  {tr("تصفية وعرض المعالم", "Map Overlays & Filter")}
+                </span>
+                <span className="text-[9px] bg-indigo-50 text-indigo-700 px-1 py-0.5 rounded font-mono font-bold">
+                  {filteredFacilities.length} / {facilities.length}
+                </span>
+              </div>
+
+              {/* Toggle Unit Labels Checkbox */}
+              <label className="flex items-center gap-2 text-[10.5px] text-slate-700 cursor-pointer select-none font-bold">
+                <input
+                  id="map-floating-toggle-labels"
+                  type="checkbox"
+                  checked={showUnitLabels}
+                  onChange={(e) => setShowUnitLabels(e.target.checked)}
+                  className="rounded border-slate-350 text-indigo-600 focus:ring-indigo-500 w-3.5 h-3.5 cursor-pointer"
+                />
+                <span>{tr("عرض مسميات الوحدات", "Toggle Unit Labels")}</span>
+              </label>
+
+              {/* Toggle Occupancy Overlays Checkbox */}
+              <label className="flex items-center gap-2 text-[10.5px] text-slate-700 cursor-pointer select-none font-bold">
+                <input
+                  id="map-floating-toggle-occupancy"
+                  type="checkbox"
+                  checked={showOccupancyLabels}
+                  onChange={(e) => setShowOccupancyLabels(e.target.checked)}
+                  className="rounded border-slate-350 text-indigo-600 focus:ring-indigo-500 w-3.5 h-3.5 cursor-pointer"
+                />
+                <span>{tr("طبقات نسب الإشغال الديناميكية", "Toggle Occupancy Overlays")}</span>
+              </label>
+
+              {/* Toggle Population Heatmap Checkbox */}
+              <label className="flex items-center gap-2 text-[10.5px] text-slate-700 cursor-pointer select-none font-bold">
+                <input
+                  id="map-floating-toggle-heatmap"
+                  type="checkbox"
+                  checked={showHeatmap}
+                  onChange={(e) => setShowHeatmap(e.target.checked)}
+                  className="rounded border-slate-350 text-indigo-600 focus:ring-indigo-500 w-3.5 h-3.5 cursor-pointer"
+                />
+                <span>{tr("خريطة التمثيل الحراري للكثافة", "Toggle Population Heatmap")}</span>
+              </label>
+
+              {/* Multi-category Filtering buttons to reduce clutter */}
+              <div className="flex flex-col gap-1 mt-1">
+                <span className="text-[9px] text-slate-400 font-bold block mb-0.5">
+                  {tr("تصفية معالم المخطط وتقليل الازدحام:", "Filter elements to reduce clutter:")}
+                </span>
+                
+                <div className="grid grid-cols-1 gap-1">
+                  <button
+                    onClick={() => setActiveFilterCategory("all")}
+                    className={`text-[9px] py-1 px-1.5 rounded-lg font-bold text-right flex items-center justify-between transition-all border cursor-pointer ${
+                      activeFilterCategory === "all"
+                        ? "bg-indigo-600 text-white border-indigo-600 shadow-3xs"
+                        : "bg-slate-50 text-slate-600 border-slate-100 hover:bg-slate-100"
+                    }`}
+                  >
+                    <span>🌐 {tr("عرض الكل (افتراضي)", "Show All (Default)")}</span>
+                    <span className="text-[8px] opacity-85">({facilities.length})</span>
+                  </button>
+
+                  <button
+                    onClick={() => setActiveFilterCategory("shelters")}
+                    className={`text-[9px] py-1 px-1.5 rounded-lg font-bold text-right flex items-center justify-between transition-all border cursor-pointer ${
+                      activeFilterCategory === "shelters"
+                        ? "bg-indigo-600 text-white border-indigo-600 shadow-3xs"
+                        : "bg-slate-50 text-slate-600 border-slate-100 hover:bg-slate-100"
+                    }`}
+                  >
+                    <span>🏠 {tr("ملاجئ ووحدات سكنية", "Housing & Shelters Only")}</span>
+                    <span className="text-[8px] opacity-85">({facilities.filter(f => f.type === "shelter" || f.type === "neighborhood").length})</span>
+                  </button>
+
+                  <button
+                    onClick={() => setActiveFilterCategory("water_sanitation")}
+                    className={`text-[9px] py-1 px-1.5 rounded-lg font-bold text-right flex items-center justify-between transition-all border cursor-pointer ${
+                      activeFilterCategory === "water_sanitation"
+                        ? "bg-blue-600 text-white border-blue-600 shadow-3xs"
+                        : "bg-slate-50 text-slate-600 border-slate-100 hover:bg-slate-100"
+                    }`}
+                  >
+                    <span>💧 {tr("المياه والصرف والخدمات", "Water, Sanitation & Grid")}</span>
+                    <span className="text-[8px] opacity-85">({facilities.filter(f => f.type === "water" || f.type === "latrines" || f.type === "waste" || f.type === "utility_hub").length})</span>
+                  </button>
+
+                  <button
+                    onClick={() => setActiveFilterCategory("medical_safety")}
+                    className={`text-[9px] py-1 px-1.5 rounded-lg font-bold text-right flex items-center justify-between transition-all border cursor-pointer ${
+                      activeFilterCategory === "medical_safety"
+                        ? "bg-emerald-600 text-white border-emerald-600 shadow-3xs"
+                        : "bg-slate-50 text-slate-600 border-slate-100 hover:bg-slate-100"
+                    }`}
+                  >
+                    <span>🏥 {tr("المرافق الطبية والطوارئ", "Medical, Hospital & Fire")}</span>
+                    <span className="text-[8px] opacity-85">({facilities.filter(f => f.type === "medical" || f.type === "hospital" || f.type === "fire").length})</span>
+                  </button>
+
+                  <button
+                    onClick={() => setActiveFilterCategory("other")}
+                    className={`text-[9px] py-1 px-1.5 rounded-lg font-bold text-right flex items-center justify-between transition-all border cursor-pointer ${
+                      activeFilterCategory === "other"
+                        ? "bg-slate-700 text-white border-slate-700 shadow-3xs"
+                        : "bg-slate-50 text-slate-600 border-slate-100 hover:bg-slate-100"
+                    }`}
+                  >
+                    <span>📚 {tr("المدارس والخدمات الاجتماعية", "Schools, Admin & Markets")}</span>
+                    <span className="text-[8px] opacity-85">({facilities.filter(f => f.type !== "shelter" && f.type !== "neighborhood" && f.type !== "water" && f.type !== "latrines" && f.type !== "waste" && f.type !== "utility_hub" && f.type !== "medical" && f.type !== "hospital" && f.type !== "fire").length})</span>
+                  </button>
+                </div>
+              </div>
+
             </div>
           </div>
 
@@ -1277,6 +1651,42 @@ export default function InteractiveMap({ project, lang = "ar" }: InteractiveMapP
             </div>
           )}
           
+        </div>
+
+        {/* Conceptual Camp Visualization (Repeated Units) */}
+        <div className="bg-white border border-slate-200 p-4 rounded-xl flex flex-col gap-3">
+          <div className="flex items-center gap-2">
+            <div className="p-1.5 bg-emerald-100 text-emerald-700 rounded-lg">
+              <Tent className="w-4 h-4" />
+            </div>
+            <div className="text-right">
+              <h4 className="text-xs font-black text-slate-800">
+                {tr("مخطط تخيلي متكامل للوحدات المتكررة (المخيم المؤقت)", "Conceptual Visualization of Repeated Units (Temporary Camp Layout)")}
+              </h4>
+              <p className="text-[9px] text-slate-500 mt-0.5">
+                {tr("محاكاة تخيلية ثلاثية الأبعاد لتراص وتكرار الوحدات السكنية في الموقع المحدد", "3D photorealistic simulation view of the repeated residential units positioned in grid formation")}
+              </p>
+            </div>
+          </div>
+          
+          <div className="relative aspect-video w-full rounded-xl overflow-hidden border border-slate-200 shadow-xs group bg-slate-50">
+            <img 
+              src={imgCamp} 
+              alt="Conceptual Camp Layout of Repeated Units" 
+              referrerPolicy="no-referrer"
+              className="w-full h-full object-cover group-hover:scale-102 transition-all duration-700"
+            />
+            <div className="absolute top-2 right-2 bg-black/60 text-[8px] text-white px-2 py-0.5 rounded-md font-bold backdrop-blur-xs">
+              {tr("تصور تخيلي بالذكاء الاصطناعي 3D Render", "AI-Generated 3D Conceptual Render")}
+            </div>
+          </div>
+          
+          <p className="text-[10px] text-slate-400 text-center leading-normal">
+            {tr(
+              "تظهر الصورة النمط الإنشائي المتكرر الموزع في مساحة المخيم لضمان السلامة، توفير الطاقة الشمسية، ومقاومة الكوارث الجوية.",
+              "The conceptual rendering illustrates the modular and repeated safety shelter pattern distributed in grid formation to optimize solar energy and high wind resilience."
+            )}
+          </p>
         </div>
 
         {/* Map Explanatory Caption */}

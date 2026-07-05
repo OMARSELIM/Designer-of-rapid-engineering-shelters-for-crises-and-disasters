@@ -52,6 +52,8 @@ import { SmartCityMetrics } from "./components/SmartCityMetrics";
 import { LogisticsView } from "./components/LogisticsView";
 import { CampInfrastructureView } from "./components/CampInfrastructureView";
 import { EvacuationSimulationView } from "./components/EvacuationSimulationView";
+import { AdvancedPlanningEngine } from "./components/AdvancedPlanningEngine";
+import { RiskAlertBanner } from "./components/RiskAlertBanner";
 import { ResponsiveContainer, LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend } from "recharts";
 
 // @ts-ignore
@@ -589,6 +591,36 @@ function calculateHeuristicRisk(input: any, lang: string) {
   };
 }
 
+const encodeProjectToBase64 = (proj: any): string => {
+  try {
+    const jsonStr = JSON.stringify(proj);
+    const utf8Bytes = new TextEncoder().encode(jsonStr);
+    let binary = "";
+    for (let i = 0; i < utf8Bytes.length; i++) {
+      binary += String.fromCharCode(utf8Bytes[i]);
+    }
+    return btoa(binary);
+  } catch (err) {
+    console.error("Failed to encode project to base64", err);
+    return "";
+  }
+};
+
+const decodeProjectFromBase64 = (base64Str: string): any => {
+  try {
+    const binary = atob(base64Str);
+    const bytes = new Uint8Array(binary.length);
+    for (let i = 0; i < binary.length; i++) {
+      bytes[i] = binary.charCodeAt(i);
+    }
+    const jsonStr = new TextDecoder().decode(bytes);
+    return JSON.parse(jsonStr);
+  } catch (err) {
+    console.error("Failed to decode project from base64", err);
+    return null;
+  }
+};
+
 export default function App() {
   const [lang, setLang] = useState<'ar' | 'en'>('ar');
   const t = translations[lang];
@@ -612,15 +644,35 @@ export default function App() {
   const [loadingStep, setLoadingStep] = useState<string>("");
   const [errorMsg, setErrorMsg] = useState<string>("");
   const [successMsg, setSuccessMsg] = useState<string>("");
-  const [activeResultTab, setActiveResultTab] = useState<'design' | 'bom' | 'timeline' | 'budget' | 'map' | 'infrastructure' | 'metrics' | 'logistics' | 'simulation'>('design');
+  const [activeResultTab, setActiveResultTab] = useState<'design' | 'bom' | 'timeline' | 'budget' | 'map' | 'infrastructure' | 'metrics' | 'logistics' | 'simulation' | 'advanced' | 'compare'>('design');
+  const [comparePlanAId, setComparePlanAId] = useState<string>("");
+  const [comparePlanBId, setComparePlanBId] = useState<string>("");
 
   const [sharing, setSharing] = useState<boolean>(false);
   const [shareId, setShareId] = useState<string | null>(null);
   const [showShareModal, setShowShareModal] = useState<boolean>(false);
   const [copiedShareLink, setCopiedShareLink] = useState<boolean>(false);
+  const [copiedBase64Link, setCopiedBase64Link] = useState<boolean>(false);
 
   useEffect(() => {
     const params = new URLSearchParams(window.location.search);
+    const planBase64 = params.get("plan");
+    if (planBase64) {
+      try {
+        const decoded = decodeProjectFromBase64(planBase64);
+        if (decoded) {
+          setProject(decoded);
+          setInput(decoded.input);
+          setSuccessMsg(lang === "ar" ? "تم فك تشفير وتحميل الخطة المشتركة بنجاح فوري!" : "Shared plan decoded and loaded instantly!");
+          setTimeout(() => setSuccessMsg(""), 4000);
+          return;
+        }
+      } catch (err) {
+        console.error("Failed to load base64 plan:", err);
+        setErrorMsg(lang === "ar" ? "فشل فك تشفير خطة المشروع من الرابط." : "Failed to decode project plan from link.");
+      }
+    }
+
     const projectId = params.get("project");
     if (projectId) {
       setLoading(true);
@@ -1284,6 +1336,9 @@ export default function App() {
           </span>
         </div>
       </header>
+
+      {/* Real-time Risk Alert Component */}
+      <RiskAlertBanner project={project} lang={lang} />
 
       {/* Main Workspace */}
       <main className="max-w-7xl mx-auto grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
@@ -2238,6 +2293,28 @@ export default function App() {
                   >
                     🚨 {lang === "ar" ? "محاكاة الإخلاء والطوارئ" : "Emergency & Evac Simulation"}
                   </button>
+                  <button
+                    id="tab-results-advanced-btn"
+                    onClick={() => setActiveResultTab("advanced")}
+                    className={`flex-1 py-4 px-4 text-xs font-extrabold text-center border-b-2 whitespace-nowrap transition-all ${
+                      activeResultTab === "advanced"
+                        ? "border-indigo-600 text-indigo-700 bg-white"
+                        : "border-transparent text-slate-500 hover:text-slate-800 hover:bg-slate-50"
+                    }`}
+                  >
+                    ⚡ {lang === "ar" ? "الهندسة المتقدمة والتحليل (AI)" : "AI Advanced Engineering"}
+                  </button>
+                  <button
+                    id="tab-results-compare-btn"
+                    onClick={() => setActiveResultTab("compare")}
+                    className={`flex-1 py-4 px-4 text-xs font-extrabold text-center border-b-2 whitespace-nowrap transition-all ${
+                      activeResultTab === "compare"
+                        ? "border-indigo-600 text-indigo-700 bg-white"
+                        : "border-transparent text-slate-500 hover:text-slate-800 hover:bg-slate-50"
+                    }`}
+                  >
+                    🔄 {lang === "ar" ? "مقارنة الخطط" : "Compare Plans"}
+                  </button>
                 </nav>
 
                 <div className="p-5">
@@ -3091,6 +3168,263 @@ export default function App() {
                       project={project}
                     />
                   )}
+
+                  {activeResultTab === "advanced" && (
+                    <AdvancedPlanningEngine
+                      project={project}
+                      lang={lang}
+                    />
+                  )}
+
+                  {activeResultTab === "compare" && (
+                    <div className="flex flex-col gap-6" dir={lang === "ar" ? "rtl" : "ltr"}>
+                      <div className="bg-slate-50 p-4 rounded-xl border border-slate-100 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3">
+                        <div>
+                          <h4 className="font-bold text-slate-800 text-xs">
+                            {lang === "ar" ? "أداة مقارنة وتحليل خطط الاستجابة السريعة" : "Response Plans Side-by-Side Comparison Tool"}
+                          </h4>
+                          <p className="text-[10px] text-slate-400 mt-0.5">
+                            {lang === "ar"
+                              ? "اختر خطتين من الخطط المحفوظة أو الخطة الحالية للمقارنة بين التكلفة، القدرة الاستيعابية، وسلامة الموقع."
+                              : "Select two response plans to compare their critical engineering metrics, cost structures, and safety levels."}
+                          </p>
+                        </div>
+                      </div>
+
+                      {/* Selectors */}
+                      {(() => {
+                        const savedProjects: ShelterProject[] = [];
+                        try {
+                          const savedJson = localStorage.getItem("rapid_shelter_saved_projects");
+                          if (savedJson) {
+                            const list = JSON.parse(savedJson);
+                            if (Array.isArray(list)) {
+                              savedProjects.push(...list);
+                            }
+                          }
+                        } catch (e) {
+                          console.error(e);
+                        }
+
+                        const selectablePlans = [...savedProjects];
+                        if (project && !selectablePlans.some(p => p.id === project.id)) {
+                          selectablePlans.unshift({
+                            ...project,
+                            input: {
+                              ...project.input,
+                              locationName: `${project.input.locationName} (${lang === "ar" ? "الخطة النشطة الحالية" : "Current Active Plan"})`
+                            }
+                          });
+                        }
+
+                        const pAId = comparePlanAId || (selectablePlans[0]?.id || "");
+                        const pBId = comparePlanBId || (selectablePlans[1]?.id || selectablePlans[0]?.id || "");
+                        const pA = selectablePlans.find(p => p.id === pAId);
+                        const pB = selectablePlans.find(p => p.id === pBId);
+
+                        return (
+                          <>
+                            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                              {/* Selector A */}
+                              <div className="bg-white p-4 rounded-xl border border-slate-200 shadow-xs flex flex-col gap-2">
+                                <label className="text-xs font-bold text-slate-500">
+                                  {lang === "ar" ? "الخطة الأولى (أ):" : "Plan A:"}
+                                </label>
+                                <select
+                                  value={pAId}
+                                  onChange={(e) => setComparePlanAId(e.target.value)}
+                                  className="border border-slate-200 rounded-lg p-2 text-xs focus:outline-none focus:ring-1 focus:ring-indigo-500 bg-white"
+                                >
+                                  {selectablePlans.map((p) => (
+                                    <option key={p.id} value={p.id}>
+                                      {p.input.locationName} ({p.input.disasterType})
+                                    </option>
+                                  ))}
+                                  {selectablePlans.length === 0 && (
+                                    <option value="">{lang === "ar" ? "لا توجد خطط متوفرة" : "No plans available"}</option>
+                                  )}
+                                </select>
+                              </div>
+
+                              {/* Selector B */}
+                              <div className="bg-white p-4 rounded-xl border border-slate-200 shadow-xs flex flex-col gap-2">
+                                <label className="text-xs font-bold text-slate-500">
+                                  {lang === "ar" ? "الخطة الثانية (ب):" : "Plan B:"}
+                                </label>
+                                <select
+                                  value={pBId}
+                                  onChange={(e) => setComparePlanBId(e.target.value)}
+                                  className="border border-slate-200 rounded-lg p-2 text-xs focus:outline-none focus:ring-1 focus:ring-indigo-500 bg-white"
+                                >
+                                  {selectablePlans.map((p) => (
+                                    <option key={p.id} value={p.id}>
+                                      {p.input.locationName} ({p.input.disasterType})
+                                    </option>
+                                  ))}
+                                  {selectablePlans.length === 0 && (
+                                    <option value="">{lang === "ar" ? "لا توجد خطط متوفرة" : "No plans available"}</option>
+                                  )}
+                                </select>
+                              </div>
+                            </div>
+
+                            {/* Comparison Table */}
+                            {!pA || !pB ? (
+                              <div className="bg-amber-50 border border-amber-200 p-4 rounded-xl text-center text-xs text-amber-800">
+                                {lang === "ar"
+                                  ? "يرجى إنشاء وحفظ خطتين على الأقل لمقارنتهما جنباً إلى جنب."
+                                  : "Please generate and save at least two plans to compare them side-by-side."}
+                              </div>
+                            ) : (
+                              <div className="bg-white border border-slate-200 rounded-xl overflow-hidden shadow-xs">
+                                <table className="w-full text-right text-xs">
+                                  <thead className="bg-slate-50 text-slate-700 border-b border-slate-200 font-bold">
+                                    <tr>
+                                      <th className={`py-3 px-4 ${lang === "ar" ? "text-right" : "text-left"} w-1/3`}>
+                                        {lang === "ar" ? "المعيار الهندسي" : "Engineering Metric"}
+                                      </th>
+                                      <th className="py-3 px-4 text-center w-1/3 bg-indigo-50/40 text-indigo-900 border-l border-r border-slate-100">
+                                        {pA.input.locationName}
+                                      </th>
+                                      <th className="py-3 px-4 text-center w-1/3 bg-violet-50/40 text-violet-900">
+                                        {pB.input.locationName}
+                                      </th>
+                                    </tr>
+                                  </thead>
+                                  <tbody className="divide-y divide-slate-100 text-slate-600">
+                                    <tr>
+                                      <td className={`py-3 px-4 font-bold ${lang === "ar" ? "text-right" : "text-left"} bg-slate-50/20`}>
+                                        {lang === "ar" ? "نوع الكارثة والاستجابة" : "Disaster Type"}
+                                      </td>
+                                      <td className="py-3 px-4 text-center font-semibold text-slate-800 border-l border-r border-slate-100">
+                                        {pA.input.disasterType}
+                                      </td>
+                                      <td className="py-3 px-4 text-center font-semibold text-slate-800">
+                                        {pB.input.disasterType}
+                                      </td>
+                                    </tr>
+                                    <tr>
+                                      <td className={`py-3 px-4 font-bold ${lang === "ar" ? "text-right" : "text-left"} bg-slate-50/20`}>
+                                        {lang === "ar" ? "عدد الأفراد المستهدفين" : "Target Population"}
+                                      </td>
+                                      <td className="py-3 px-4 text-center font-semibold border-l border-r border-slate-100">
+                                        {pA.input.peopleCount.toLocaleString()} {lang === "ar" ? "فرد" : "people"}
+                                      </td>
+                                      <td className="py-3 px-4 text-center font-semibold">
+                                        {pB.input.peopleCount.toLocaleString()} {lang === "ar" ? "فرد" : "people"}
+                                      </td>
+                                    </tr>
+                                    <tr>
+                                      <td className={`py-3 px-4 font-bold ${lang === "ar" ? "text-right" : "text-left"} bg-slate-50/20`}>
+                                        {lang === "ar" ? "نوع المأوى" : "Shelter Design Type"}
+                                      </td>
+                                      <td className="py-3 px-4 text-center border-l border-r border-slate-100">
+                                        {pA.suggestedModel.name} ({pA.suggestedModel.type})
+                                      </td>
+                                      <td className="py-3 px-4 text-center">
+                                        {pB.suggestedModel.name} ({pB.suggestedModel.type})
+                                      </td>
+                                    </tr>
+                                    <tr>
+                                      <td className={`py-3 px-4 font-bold ${lang === "ar" ? "text-right" : "text-left"} bg-slate-50/20`}>
+                                        {lang === "ar" ? "إجمالي الوحدات المطلوبة" : "Total Units Needed"}
+                                      </td>
+                                      <td className="py-3 px-4 text-center border-l border-r border-slate-100 font-mono">
+                                        {pA.suggestedModel.totalUnitsNeeded}
+                                      </td>
+                                      <td className="py-3 px-4 text-center font-mono">
+                                        {pB.suggestedModel.totalUnitsNeeded}
+                                      </td>
+                                    </tr>
+                                    <tr>
+                                      <td className={`py-3 px-4 font-bold ${lang === "ar" ? "text-right" : "text-left"} bg-slate-50/20`}>
+                                        {lang === "ar" ? "السعة لكل وحدة" : "Capacity Per Unit"}
+                                      </td>
+                                      <td className="py-3 px-4 text-center border-l border-r border-slate-100">
+                                        {pA.suggestedModel.capacityPerUnit} {lang === "ar" ? "أفراد" : "people"}
+                                      </td>
+                                      <td className="py-3 px-4 text-center">
+                                        {pB.suggestedModel.capacityPerUnit} {lang === "ar" ? "أفراد" : "people"}
+                                      </td>
+                                    </tr>
+                                    <tr>
+                                      <td className={`py-3 px-4 font-bold ${lang === "ar" ? "text-right" : "text-left"} bg-slate-50/20`}>
+                                        {lang === "ar" ? "الميزانية الإجمالية التقديرية" : "Total Estimated Budget"}
+                                      </td>
+                                      <td className={`py-3 px-4 text-center border-l border-r border-slate-100 font-mono font-bold ${pA.budget.totalCost <= pB.budget.totalCost ? "text-emerald-600 bg-emerald-50/20" : "text-slate-700"}`}>
+                                        ${pA.budget.totalCost.toLocaleString()} USD
+                                        {pA.budget.totalCost < pB.budget.totalCost && <span className="text-[9px] block text-emerald-500 font-sans">({lang === "ar" ? "أوفر" : "More Cost-Effective"})</span>}
+                                      </td>
+                                      <td className={`py-3 px-4 text-center font-mono font-bold ${pB.budget.totalCost <= pA.budget.totalCost ? "text-emerald-600 bg-emerald-50/20" : "text-slate-700"}`}>
+                                        ${pB.budget.totalCost.toLocaleString()} USD
+                                        {pB.budget.totalCost < pA.budget.totalCost && <span className="text-[9px] block text-emerald-500 font-sans">({lang === "ar" ? "أوفر" : "More Cost-Effective"})</span>}
+                                      </td>
+                                    </tr>
+                                    <tr>
+                                      <td className={`py-3 px-4 font-bold ${lang === "ar" ? "text-right" : "text-left"} bg-slate-50/20`}>
+                                        {lang === "ar" ? "مدة التشييد والبناء" : "Total Construction Time"}
+                                      </td>
+                                      {(() => {
+                                        const pADays = pA.timeline.reduce((sum, s) => sum + s.durationDays, 0);
+                                        const pBDays = pB.timeline.reduce((sum, s) => sum + s.durationDays, 0);
+                                        return (
+                                          <>
+                                            <td className={`py-3 px-4 text-center border-l border-r border-slate-100 font-mono font-bold ${pADays <= pBDays ? "text-emerald-600 bg-emerald-50/20" : "text-slate-700"}`}>
+                                              {pADays} {lang === "ar" ? "أيام" : "Days"}
+                                              {pADays < pBDays && <span className="text-[9px] block text-emerald-500 font-sans">({lang === "ar" ? "أسرع" : "Faster"})</span>}
+                                            </td>
+                                            <td className={`py-3 px-4 text-center font-mono font-bold ${pBDays <= pADays ? "text-emerald-600 bg-emerald-50/20" : "text-slate-700"}`}>
+                                              {pBDays} {lang === "ar" ? "أيام" : "Days"}
+                                              {pBDays < pADays && <span className="text-[9px] block text-emerald-500 font-sans">({lang === "ar" ? "أسرع" : "Faster"})</span>}
+                                            </td>
+                                          </>
+                                        );
+                                      })()}
+                                    </tr>
+                                    <tr>
+                                      <td className={`py-3 px-4 font-bold ${lang === "ar" ? "text-right" : "text-left"} bg-slate-50/20`}>
+                                        {lang === "ar" ? "معدل سلامة الموقع" : "Site Safety Score"}
+                                      </td>
+                                      <td className={`py-3 px-4 text-center border-l border-r border-slate-100 font-mono font-bold ${pA.siteRiskAssessment?.safetyScore && pB.siteRiskAssessment?.safetyScore && pA.siteRiskAssessment.safetyScore >= pB.siteRiskAssessment.safetyScore ? "text-emerald-600 bg-emerald-50/20" : "text-slate-700"}`}>
+                                        {pA.siteRiskAssessment?.safetyScore || "N/A"}/100
+                                        {pA.siteRiskAssessment?.safetyScore && pB.siteRiskAssessment?.safetyScore && pA.siteRiskAssessment.safetyScore > pB.siteRiskAssessment.safetyScore && <span className="text-[9px] block text-emerald-500 font-sans">({lang === "ar" ? "أكثر أماناً" : "Safer Location"})</span>}
+                                      </td>
+                                      <td className={`py-3 px-4 text-center font-mono font-bold ${pA.siteRiskAssessment?.safetyScore && pB.siteRiskAssessment?.safetyScore && pB.siteRiskAssessment.safetyScore >= pA.siteRiskAssessment.safetyScore ? "text-emerald-600 bg-emerald-50/20" : "text-slate-700"}`}>
+                                        {pB.siteRiskAssessment?.safetyScore || "N/A"}/100
+                                        {pA.siteRiskAssessment?.safetyScore && pB.siteRiskAssessment?.safetyScore && pB.siteRiskAssessment.safetyScore > pA.siteRiskAssessment.safetyScore && <span className="text-[9px] block text-emerald-500 font-sans">({lang === "ar" ? "أكثر أماناً" : "Safer Location"})</span>}
+                                      </td>
+                                    </tr>
+                                    <tr>
+                                      <td className={`py-3 px-4 font-bold ${lang === "ar" ? "text-right" : "text-left"} bg-slate-50/20`}>
+                                        {lang === "ar" ? "المناخ ونوع التربة" : "Climate & Soil"}
+                                      </td>
+                                      <td className="py-3 px-4 text-center border-l border-r border-slate-100">
+                                        {pA.input.climateType} / {pA.input.soilType}
+                                      </td>
+                                      <td className="py-3 px-4 text-center">
+                                        {pB.input.climateType} / {pB.input.soilType}
+                                      </td>
+                                    </tr>
+                                    <tr>
+                                      <td className={`py-3 px-4 font-bold ${lang === "ar" ? "text-right" : "text-left"} bg-slate-50/20`}>
+                                        {lang === "ar" ? "المساحة المتاحة للإنشاء" : "Available Construction Area"}
+                                      </td>
+                                      <td className="py-3 px-4 text-center border-l border-r border-slate-100 font-mono">
+                                        {pA.input.availableArea.toLocaleString()} m²
+                                      </td>
+                                      <td className="py-3 px-4 text-center font-mono">
+                                        {pB.input.availableArea.toLocaleString()} m²
+                                      </td>
+                                    </tr>
+                                  </tbody>
+                                </table>
+                              </div>
+                            )}
+                          </>
+                        );
+                      })()}
+                    </div>
+                  )}
                 </div>
               </div>
 
@@ -3209,27 +3543,314 @@ export default function App() {
       {/* Printing Styles to hide controls and fit PDF on standard A4 papers */}
       <style>{`
         @media print {
-          header, section.lg:col-span-4, button, select, input, nav, .absolute {
+          /* Hide all interactive elements */
+          #root > div:not(#printable-comprehensive-report),
+          header, nav, footer, button, select, input, textarea, .fixed, .absolute,
+          #tab-results-nav, #export-pdf-report-btn, #export-excel-csv-btn, #share-project-plan-btn {
             display: none !important;
+            height: 0 !important;
+            overflow: hidden !important;
           }
-          main {
+          
+          /* Force printable report to show */
+          #printable-comprehensive-report {
             display: block !important;
-          }
-          section.lg:col-span-8 {
+            visibility: visible !important;
             width: 100% !important;
-            grid-column: span 12 / span 12 !important;
+            background: white !important;
+            color: #000000 !important;
+            padding: 10px !important;
+            font-family: system-ui, -apple-system, sans-serif !important;
           }
-          .bg-white, .bg-slate-50 {
-            border: none !important;
-            box-shadow: none !important;
+          
+          #printable-comprehensive-report * {
+            visibility: visible !important;
+            color: #000000 !important;
+            border-color: #cccccc !important;
+          }
+
+          @page {
+            size: A4;
+            margin: 15mm;
           }
         }
       `}</style>
 
+      {/* COMPREHENSIVE RESPONSE REPORT (PRINT-ONLY) */}
+      {project && (
+        <div id="printable-comprehensive-report" className="hidden print:block bg-white text-black p-8 max-w-4xl mx-auto border border-slate-200 rounded-lg mt-8" dir={lang === "ar" ? "rtl" : "ltr"}>
+          
+          {/* Header & Letterhead */}
+          <div className="border-b-2 border-slate-800 pb-5 mb-6 flex justify-between items-start">
+            <div>
+              <h1 className="text-xl font-black text-slate-900 uppercase">
+                {lang === "ar" ? "الهيئة المشتركة للإغاثة السريعة والهندسة الإنسانية" : "Joint Humanitarian & Fast Relief Engineering Commission"}
+              </h1>
+              <p className="text-xs text-slate-500 mt-1">
+                {lang === "ar" ? "تقرير استجابة ميداني شامل لإيواء وتخطيط الطوارئ" : "Comprehensive Fast Relief Shelter Planning & Field Response Report"}
+              </p>
+              <div className="text-[10px] text-slate-400 mt-2 flex gap-4">
+                <span><strong>ID:</strong> {project.id}</span>
+                <span><strong>Date:</strong> {new Date().toLocaleDateString(lang === "ar" ? "ar-EG" : "en-US")}</span>
+              </div>
+            </div>
+            <div className="text-right">
+              <span className="inline-block border-2 border-slate-800 font-black px-3 py-1.5 text-xs text-slate-900 rounded">
+                {lang === "ar" ? "وثيقة رسمية" : "OFFICIAL REPORT"}
+              </span>
+            </div>
+          </div>
+
+          {/* Project Details */}
+          <div className="grid grid-cols-2 gap-4 mb-6 bg-slate-50 p-4 rounded-xl border border-slate-200">
+            <div>
+              <span className="text-[10px] uppercase font-bold text-slate-500 block">{lang === "ar" ? "اسم الموقع المستهدف:" : "Target Site / Location:"}</span>
+              <span className="text-xs font-bold text-slate-800">{project.input.locationName}</span>
+            </div>
+            <div>
+              <span className="text-[10px] uppercase font-bold text-slate-500 block">{lang === "ar" ? "نوع الكارثة:" : "Disaster / Hazard Context:"}</span>
+              <span className="text-xs font-bold text-slate-800">{project.input.disasterType}</span>
+            </div>
+            <div>
+              <span className="text-[10px] uppercase font-bold text-slate-500 block">{lang === "ar" ? "عدد المتضررين المستهدفين:" : "Target Population:"}</span>
+              <span className="text-xs font-bold text-slate-800">{project.input.peopleCount.toLocaleString()} {lang === "ar" ? "فرد" : "people"}</span>
+            </div>
+            <div>
+              <span className="text-[10px] uppercase font-bold text-slate-500 block">{lang === "ar" ? "المساحة الإجمالية المتاحة:" : "Available Land Area:"}</span>
+              <span className="text-xs font-bold text-slate-800">{project.input.availableArea.toLocaleString()} m²</span>
+            </div>
+          </div>
+
+          {/* SECTION 1: SITE RISK & SAFETY ASSESSMENT */}
+          <div className="mb-6">
+            <h2 className="text-xs font-black text-slate-900 border-b border-slate-800 pb-1 mb-3 uppercase flex items-center gap-1">
+              <span>{lang === "ar" ? "1. تقييم المخاطر والسلامة الجيوتقنية" : "1. Geotechnical & Site Safety Assessment"}</span>
+              <span className="font-mono text-indigo-600 bg-indigo-50 px-2 py-0.5 rounded ml-auto text-[10px]">
+                {lang === "ar" ? "معدل الأمان" : "Safety Score"}: {project.siteRiskAssessment?.safetyScore || "N/A"}/100
+              </span>
+            </h2>
+            <div className="grid grid-cols-2 gap-3 mb-4 text-xs">
+              <div className="border border-slate-150 p-2.5 rounded-lg">
+                <span className="font-bold text-slate-700 block mb-1">{lang === "ar" ? "العوامل والمخاطر الميدانية:" : "Environmental Risks:"}</span>
+                <ul className="list-disc list-inside space-y-1 text-slate-600 text-[11px]">
+                  <li>{lang === "ar" ? `نوع التربة: ${project.input.soilType}` : `Soil Type: ${project.input.soilType}`}</li>
+                  <li>{lang === "ar" ? `نوع المناخ: ${project.input.climateType}` : `Climate Type: ${project.input.climateType}`}</li>
+                  {project.siteRiskAssessment?.riskFactors && Object.entries(project.siteRiskAssessment.riskFactors).map(([k, v]) => (
+                    <li key={k} className="capitalize">
+                      {k.replace(/([A-Z])/g, ' $1')}: <span className="font-bold">{v as string}</span>
+                    </li>
+                  ))}
+                </ul>
+              </div>
+              <div className="border border-slate-150 p-2.5 rounded-lg">
+                <span className="font-bold text-slate-700 block mb-1">{lang === "ar" ? "توصيات السلامة والوقاية:" : "Safety Recommendations:"}</span>
+                <ul className="list-disc list-inside space-y-1 text-slate-600 text-[11px]">
+                  {project.siteRiskAssessment?.safetyRecommendations?.map((rec, i) => (
+                    <li key={i}>{rec}</li>
+                  ))}
+                  {(!project.siteRiskAssessment?.safetyRecommendations || project.siteRiskAssessment.safetyRecommendations.length === 0) && (
+                    <li>{lang === "ar" ? "تثبيت أساسات المأوى بقواعد ممتدة وتصريف مياه السيول." : "Establish deep anchors and proper stormwater runoff channels."}</li>
+                  )}
+                </ul>
+              </div>
+            </div>
+          </div>
+
+          {/* SECTION 2: SHELTER ARCHITECTURE SPECIFICATIONS */}
+          <div className="mb-6">
+            <h2 className="text-xs font-black text-slate-900 border-b border-slate-800 pb-1 mb-3 uppercase">
+              {lang === "ar" ? "2. المواصفات الهندسية والمعمارية للمأوى" : "2. Shelter Structural & Architectural Specifications"}
+            </h2>
+            <div className="grid grid-cols-3 gap-3 mb-4 text-[11px]">
+              <div className="bg-slate-50 p-2 rounded border border-slate-200">
+                <span className="font-bold text-slate-500 block text-[9px] uppercase">{lang === "ar" ? "اسم النموذج المقترح:" : "Suggested Model:"}</span>
+                <span className="font-bold text-slate-800">{project.suggestedModel.name}</span>
+              </div>
+              <div className="bg-slate-50 p-2 rounded border border-slate-200">
+                <span className="font-bold text-slate-500 block text-[9px] uppercase">{lang === "ar" ? "الأبعاد الهندسية:" : "Unit Dimensions:"}</span>
+                <span className="font-bold text-slate-800">{project.suggestedModel.dimensions}</span>
+              </div>
+              <div className="bg-slate-50 p-2 rounded border border-slate-200">
+                <span className="font-bold text-slate-500 block text-[9px] uppercase">{lang === "ar" ? "التوزيع الداخلي:" : "Room Layout:"}</span>
+                <span className="font-bold text-slate-800">{project.suggestedModel.roomDistribution}</span>
+              </div>
+              <div className="bg-slate-50 p-2 rounded border border-slate-200">
+                <span className="font-bold text-slate-500 block text-[9px] uppercase">{lang === "ar" ? "درجة العزل الحراري:" : "Insulation Rating:"}</span>
+                <span className="font-bold text-slate-800">{project.suggestedModel.insulationRating}</span>
+              </div>
+              <div className="bg-slate-50 p-2 rounded border border-slate-200">
+                <span className="font-bold text-slate-500 block text-[9px] uppercase">{lang === "ar" ? "نوع الأساس المعتمد:" : "Approved Foundation:"}</span>
+                <span className="font-bold text-slate-800">{project.suggestedModel.foundationType}</span>
+              </div>
+              <div className="bg-slate-50 p-2 rounded border border-slate-200">
+                <span className="font-bold text-slate-500 block text-[9px] uppercase">{lang === "ar" ? "المواد الرئيسية المقاومة:" : "Primary Materials:"}</span>
+                <span className="font-bold text-slate-800">
+                  {project.blueprints?.elevation?.materials 
+                    ? project.blueprints.elevation.materials.join(", ") 
+                    : (project.suggestedModel as any).materials 
+                    ? (project.suggestedModel as any).materials.join(", ") 
+                    : (lang === "ar" ? "حديد مجلفن، ألواح ساندوتش بانل، ألومنيوم" : "Galvanized steel, sandwich panels, aluminum")}
+                </span>
+              </div>
+            </div>
+            <div className="border border-slate-200 p-3 rounded-xl text-[11px] text-slate-600 bg-slate-50/50">
+              <strong className="text-slate-800 block mb-1">{lang === "ar" ? "وصف التصميم والمخطط الأفقي:" : "Design Concept & Floor Plan Description:"}</strong>
+              {project.suggestedModel.floorPlanDescription}
+            </div>
+          </div>
+
+          {/* SECTION 3: CAMP LAYOUT & INFRASTRUCTURE */}
+          <div className="mb-6">
+            <h2 className="text-xs font-black text-slate-900 border-b border-slate-800 pb-1 mb-3 uppercase">
+              {lang === "ar" ? "3. المخطط العام وتوزيع البنية التحتية" : "3. Camp Layout Grid & Infrastructure Quantities"}
+            </h2>
+            <div className="grid grid-cols-2 gap-4 text-xs mb-4">
+              <div className="border border-slate-150 p-3 rounded-lg">
+                <span className="font-bold text-slate-700 block mb-1">{lang === "ar" ? "مواصفات التوزيع الميداني:" : "Distribution Settings:"}</span>
+                <ul className="list-disc list-inside space-y-1 text-slate-600 text-[11px]">
+                  <li>{lang === "ar" ? `إجمالي وحدات المأوى المطلوبة: ${project.suggestedModel.totalUnitsNeeded} وحدة` : `Total Shelter Units Required: ${project.suggestedModel.totalUnitsNeeded} units`}</li>
+                  <li>{lang === "ar" ? "المسافة الفاصلة للأمان: 3-5 متر لمنع انتشار الحرائق" : "Safety spacing: 3-5m apart to mitigate fire hazard spreads"}</li>
+                  <li>{lang === "ar" ? "تخطيط الشوارع والممرات: شبكي متعامد لتيسير حركة الطوارئ" : "Camp roads layout: Orthogonal grid structure for optimal emergency routing"}</li>
+                </ul>
+              </div>
+              <div className="border border-slate-150 p-3 rounded-lg">
+                <span className="font-bold text-slate-700 block mb-1">{lang === "ar" ? "مرافق البنية التحتية والخدمات المقررة:" : "Infrastructure & Support Facilities:"}</span>
+                <table className="w-full text-right text-[10px] mt-1 border-collapse">
+                  <thead>
+                    <tr className="border-b border-slate-200 text-slate-500">
+                      <th className={`py-1 ${lang === "ar" ? "text-right" : "text-left"}`}>{lang === "ar" ? "المرفق الخدمي" : "Support Facility"}</th>
+                      <th className="py-1 text-center">{lang === "ar" ? "العدد المعتمد" : "Count"}</th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-slate-100 text-slate-700">
+                    {project.campLayout?.facilities?.map((fac, i) => (
+                      <tr key={i}>
+                        <td className="py-1">{fac.type === "clinic" ? (lang === "ar" ? "مركز صحي / عيادة" : "Medical Clinic") : fac.type === "school" ? (lang === "ar" ? "مدرسة / مركز تعليمي" : "School Classroom") : fac.type === "admin" ? (lang === "ar" ? "مركز إداري وأمني" : "Admin HQ") : fac.name}</td>
+                        <td className="py-1 text-center font-mono">{fac.count}</td>
+                      </tr>
+                    ))}
+                    {(!project.campLayout?.facilities || project.campLayout.facilities.length === 0) && (
+                      <>
+                        <tr>
+                          <td className="py-1">{lang === "ar" ? "مركز صحي ميداني" : "Field Medical Center"}</td>
+                          <td className="py-1 text-center font-mono">1</td>
+                        </tr>
+                        <tr>
+                          <td className="py-1">{lang === "ar" ? "خيمة توزيع المساعدات والمستودعات" : "Logistics & Distribution Tent"}</td>
+                          <td className="py-1 text-center font-mono">2</td>
+                        </tr>
+                      </>
+                    )}
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          </div>
+
+          {/* SECTION 4: AGGREGATED BOM & BUDGET ANALYSIS */}
+          <div className="mb-6">
+            <h2 className="text-xs font-black text-slate-900 border-b border-slate-800 pb-1 mb-3 uppercase">
+              {lang === "ar" ? "4. جدول الكميات الإنشائية المجمعة والميزانية" : "4. Aggregated Bill of Materials (BOM) & Financial Estimates"}
+            </h2>
+            
+            <div className="bg-slate-50 border border-slate-200 p-4 rounded-xl mb-4 grid grid-cols-4 gap-2 text-center text-xs font-bold">
+              <div className="border-r border-slate-200 last:border-0 pr-2">
+                <span className="text-[9px] text-slate-400 uppercase block">{lang === "ar" ? "تكلفة المواد الخام:" : "Materials Budget:"}</span>
+                <span className="font-mono text-slate-800">${project.budget.materialsCost.toLocaleString()} USD</span>
+              </div>
+              <div className="border-r border-slate-200 last:border-0 pr-2">
+                <span className="text-[9px] text-slate-400 uppercase block">{lang === "ar" ? "تكلفة الأيدي العاملة:" : "Labor Cost:"}</span>
+                <span className="font-mono text-slate-800">${project.budget.laborCost.toLocaleString()} USD</span>
+              </div>
+              <div className="border-r border-slate-200 last:border-0 pr-2">
+                <span className="text-[9px] text-slate-400 uppercase block">{lang === "ar" ? "الشحن والنقل الميداني:" : "Logistics & Freight:"}</span>
+                <span className="font-mono text-slate-800">${project.budget.transportCost.toLocaleString()} USD</span>
+              </div>
+              <div className="border-r border-slate-200 last:border-0 pr-2">
+                <span className="text-[9px] text-slate-400 uppercase block">{lang === "ar" ? "التكلفة الكلية المقررة:" : "TOTAL ESTIMATED COST:"}</span>
+                <span className="font-mono text-indigo-700 text-sm font-black">${project.budget.totalCost.toLocaleString()} USD</span>
+              </div>
+            </div>
+
+            <table className="w-full text-right text-[10px] border border-slate-200 rounded-lg overflow-hidden">
+              <thead className="bg-slate-100 text-slate-700 font-bold border-b border-slate-250">
+                <tr>
+                  <th className={`py-2 px-3 ${lang === "ar" ? "text-right" : "text-left"}`}>{lang === "ar" ? "البند الهندسي / التصنيف" : "Structural Material Category"}</th>
+                  <th className="py-2 px-3 text-center">{lang === "ar" ? "إجمالي الوحدات والمواد" : "Aggregated Quantity"}</th>
+                  <th className="py-2 px-3 text-center">{lang === "ar" ? "الوحدة التقديرية" : "Unit Type"}</th>
+                  <th className="py-2 px-3 text-center">{lang === "ar" ? "إجمالي التكلفة الفرعية" : "Category Subtotal"}</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-slate-100 text-slate-600 font-mono">
+                {(() => {
+                  const acc: Record<string, { category: string; totalPrice: number; quantity: number; unit: string }> = {};
+                  project.billOfMaterials.forEach((item) => {
+                    const catName = item.category || "General Materials";
+                    if (!acc[catName]) {
+                      acc[catName] = { category: catName, totalPrice: 0, quantity: 0, unit: item.unit || "unit" };
+                    }
+                    acc[catName].totalPrice += item.totalPrice;
+                    acc[catName].quantity += item.quantity;
+                  });
+                  return Object.values(acc).map((item, i) => (
+                    <tr key={i} className="hover:bg-slate-50">
+                      <td className={`py-2 px-3 font-sans font-bold text-slate-800 ${lang === "ar" ? "text-right" : "text-left"}`}>{item.category}</td>
+                      <td className="py-2 px-3 text-center">{item.quantity.toLocaleString()}</td>
+                      <td className="py-2 px-3 text-center font-sans">{item.unit}</td>
+                      <td className="py-2 px-3 text-center font-bold text-slate-900">${item.totalPrice.toLocaleString()} USD</td>
+                    </tr>
+                  ));
+                })()}
+              </tbody>
+            </table>
+          </div>
+
+          {/* SECTION 5: TIMELINE & GENERAL ASSEMBLY INSTRUCTIONS */}
+          <div className="mb-6 page-break-before">
+            <h2 className="text-xs font-black text-slate-900 border-b border-slate-800 pb-1 mb-3 uppercase">
+              {lang === "ar" ? "5. الجدول الزمني وإجراءات التجميع الهندسي الميداني" : "5. Master Timeline & Field Assembly Steps"}
+            </h2>
+            <table className="w-full text-right text-[10px] border border-slate-200">
+              <thead className="bg-slate-100 text-slate-700 font-bold border-b border-slate-200">
+                <tr>
+                  <th className={`py-1.5 px-3 ${lang === "ar" ? "text-right" : "text-left"}`}>{lang === "ar" ? "المرحلة الإنشائية الميدانية" : "Assembly / Construction Stage"}</th>
+                  <th className="py-1.5 px-3 text-center">{lang === "ar" ? "المدة المتوقعة" : "Duration"}</th>
+                  <th className={`py-1.5 px-3 ${lang === "ar" ? "text-right" : "text-left"}`}>{lang === "ar" ? "الإجراءات والمسؤوليات الهندسية المعتمدة" : "Standard Operating Procedures (SOP)"}</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-slate-100 text-slate-600 font-sans">
+                {project.timeline.map((step, i) => (
+                  <tr key={i}>
+                    <td className="py-2 px-3 font-bold text-slate-800">{step.step}</td>
+                    <td className="py-2 px-3 text-center font-mono">{step.durationDays} {lang === "ar" ? "أيام" : "Days"}</td>
+                    <td className="py-2 px-3 text-[9.5px] leading-relaxed">{step.description}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+
+          {/* Official Signatures */}
+          <div className="mt-12 pt-8 border-t border-slate-300 flex justify-between text-xs">
+            <div className="text-center w-1/3">
+              <span className="block font-bold text-slate-700 mb-10">{lang === "ar" ? "المهندس الميداني المشرف" : "Lead Field Engineer Signature"}</span>
+              <div className="border-b border-dashed border-slate-400 w-44 mx-auto"></div>
+              <span className="text-[10px] text-slate-400 block mt-1">{lang === "ar" ? "التوقيع والتاريخ" : "Sign & Date"}</span>
+            </div>
+            <div className="text-center w-1/3">
+              <span className="block font-bold text-slate-700 mb-10">{lang === "ar" ? "منسق الميدان واللوجستيات" : "Logistics Coordinator Signature"}</span>
+              <div className="border-b border-dashed border-slate-400 w-44 mx-auto"></div>
+              <span className="text-[10px] text-slate-400 block mt-1">{lang === "ar" ? "التوقيع والتاريخ" : "Sign & Date"}</span>
+            </div>
+          </div>
+
+        </div>
+      )}
+
       {/* Share Project Modal */}
-      {showShareModal && shareId && (
+      {showShareModal && project && (
         <div className="fixed inset-0 bg-slate-900/60 backdrop-blur-xs flex items-center justify-center z-50 p-4" dir={lang === "ar" ? "rtl" : "ltr"}>
-          <div className="bg-white rounded-2xl max-w-md w-full p-6 shadow-2xl border border-slate-100 relative flex flex-col gap-4 animate-scale-up">
+          <div className="bg-white rounded-2xl max-w-lg w-full p-6 shadow-2xl border border-slate-100 relative flex flex-col gap-4 animate-scale-up max-h-[90vh] overflow-y-auto">
             
             {/* Header */}
             <div className="text-center">
@@ -3237,59 +3858,111 @@ export default function App() {
                 <Share2 className="w-6 h-6" />
               </div>
               <h3 className="text-base font-extrabold text-slate-800">
-                {lang === "ar" ? "مشاركة مخطط المشروع" : "Share Project Blueprint"}
+                {lang === "ar" ? "مشاركة مخطط المشروع الاستجابة" : "Share Response Project Plan"}
               </h3>
               <p className="text-xs text-slate-500 mt-1">
                 {lang === "ar" 
-                  ? "تم توليد رابط فريد وكود QR بنجاح لمشاركة كامل تفاصيل هذا المأوى المتكامل."
-                  : "Unique link and QR code generated successfully to share the complete shelter model details."}
+                  ? "توليد خيارات مشاركة مرنة وموثوقة لمخططات المأوى وجداول الكميات والبيانات الهندسية."
+                  : "Generate flexible and reliable sharing links for shelter designs, bill of materials, and engineering plans."}
               </p>
             </div>
 
-            {/* Link Box */}
-            <div className="flex flex-col gap-1.5">
-              <span className="text-[11px] font-bold text-slate-500">
-                {lang === "ar" ? "الرابط الفريد للمشروع:" : "Unique Project URL:"}
-              </span>
-              <div className="flex items-center gap-2 bg-slate-50 border border-slate-200 rounded-xl p-2.5">
+            {/* Option 1: Base64 Encoded URL (Recommended - Self Contained) */}
+            <div className="flex flex-col gap-1.5 bg-indigo-50/50 p-3.5 rounded-xl border border-indigo-100/50">
+              <div className="flex justify-between items-center">
+                <span className="text-[11px] font-bold text-indigo-950 flex items-center gap-1">
+                  🌐 {lang === "ar" ? "1. رابط البيانات الذاتي المشفر (RTL-Supported Base64):" : "1. Self-Contained Base64 URL (Decodes instantly offline):"}
+                </span>
+                <span className="text-[9px] bg-indigo-200 text-indigo-800 font-bold px-1.5 py-0.5 rounded">
+                  {lang === "ar" ? "موصى به" : "Recommended"}
+                </span>
+              </div>
+              <p className="text-[9.5px] text-slate-500">
+                {lang === "ar"
+                  ? "يحتوي هذا الرابط على كامل بيانات الخطة مشفرة بنظام Base64. يفتح فوراً لدى أي طرف آخر حتى وإن لم تكن متصلاً بقاعدة البيانات."
+                  : "This URL embeds the entire plan payload inside the URL. It is fully offline-first and parses instantly for the recipient."}
+              </p>
+              <div className="flex items-center gap-2 bg-white border border-slate-200 rounded-lg p-2 mt-1">
                 <input
                   type="text"
                   readOnly
-                  value={`${window.location.origin}/?project=${shareId}`}
-                  className="bg-transparent border-none text-xs text-slate-600 font-mono focus:outline-none flex-1 select-all"
+                  value={`${window.location.origin}/?plan=${encodeProjectToBase64(project)}`}
+                  className="bg-transparent border-none text-[10px] text-slate-600 font-mono focus:outline-none flex-1 select-all"
                 />
                 <button
                   onClick={() => {
-                    navigator.clipboard.writeText(`${window.location.origin}/?project=${shareId}`);
-                    setCopiedShareLink(true);
-                    setTimeout(() => setCopiedShareLink(false), 2000);
+                    navigator.clipboard.writeText(`${window.location.origin}/?plan=${encodeProjectToBase64(project)}`);
+                    setCopiedBase64Link(true);
+                    setTimeout(() => setCopiedBase64Link(false), 2000);
                   }}
                   className={`px-3 py-1.5 rounded-lg font-bold text-[10px] transition-all flex items-center gap-1 shrink-0 ${
-                    copiedShareLink
+                    copiedBase64Link
                       ? "bg-emerald-100 text-emerald-800"
                       : "bg-indigo-600 hover:bg-indigo-700 text-white cursor-pointer"
                   }`}
                 >
-                  {copiedShareLink ? (
+                  {copiedBase64Link ? (
                     <>
                       <Check className="w-3.5 h-3.5" />
                       <span>{lang === "ar" ? "تم النسخ!" : "Copied!"}</span>
                     </>
                   ) : (
-                    <span>{lang === "ar" ? "نسخ الرابط" : "Copy URL"}</span>
+                    <span>{lang === "ar" ? "نسخ" : "Copy"}</span>
                   )}
                 </button>
               </div>
             </div>
 
-            {/* QR Code Graphic */}
+            {/* Option 2: Cloud Database-backed Link */}
+            {shareId && (
+              <div className="flex flex-col gap-1.5 bg-slate-50 p-3.5 rounded-xl border border-slate-200">
+                <span className="text-[11px] font-bold text-slate-700 flex items-center gap-1">
+                  ☁️ {lang === "ar" ? "2. الرابط السحابي القصير (Cloud Short URL):" : "2. Cloud Short URL (Database-backed):"}
+                </span>
+                <div className="flex items-center gap-2 bg-white border border-slate-200 rounded-lg p-2 mt-1">
+                  <input
+                    type="text"
+                    readOnly
+                    value={`${window.location.origin}/?project=${shareId}`}
+                    className="bg-transparent border-none text-[10px] text-slate-600 font-mono focus:outline-none flex-1 select-all"
+                  />
+                  <button
+                    onClick={() => {
+                      navigator.clipboard.writeText(`${window.location.origin}/?project=${shareId}`);
+                      setCopiedShareLink(true);
+                      setTimeout(() => setCopiedShareLink(false), 2000);
+                    }}
+                    className={`px-3 py-1.5 rounded-lg font-bold text-[10px] transition-all flex items-center gap-1 shrink-0 ${
+                      copiedShareLink
+                        ? "bg-emerald-100 text-emerald-800"
+                        : "bg-indigo-600 hover:bg-indigo-700 text-white cursor-pointer"
+                    }`}
+                  >
+                    {copiedShareLink ? (
+                      <>
+                        <Check className="w-3.5 h-3.5" />
+                        <span>{lang === "ar" ? "تم النسخ!" : "Copied!"}</span>
+                      </>
+                    ) : (
+                      <span>{lang === "ar" ? "نسخ" : "Copy"}</span>
+                    )}
+                  </button>
+                </div>
+              </div>
+            )}
+
+            {/* QR Code Graphic for Base64 URL (using a compact size or fallback to Cloud link if too long, or cloud short link by default for QR scan-friendliness) */}
             <div className="bg-slate-50 border border-slate-100 rounded-2xl p-4 text-center flex flex-col items-center justify-center gap-2">
               <span className="text-[11px] font-bold text-slate-500 block">
-                {lang === "ar" ? "رمز الاستجابة السريعة (QR Code):" : "Project QR Code:"}
+                {lang === "ar" ? "رمز الاستجابة السريعة لمسح الخطة (QR Code):" : "Scan to Load Plan (QR Code):"}
               </span>
               <div className="bg-white p-3 rounded-xl border border-slate-200 shadow-sm">
                 <img
-                  src={`https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=${encodeURIComponent(`${window.location.origin}/?project=${shareId}`)}`}
+                  src={`https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=${encodeURIComponent(
+                    shareId 
+                      ? `${window.location.origin}/?project=${shareId}` 
+                      : `${window.location.origin}/?plan=${encodeProjectToBase64(project).substring(0, 1000)}`
+                  )}`}
                   alt="QR Code"
                   referrerPolicy="no-referrer"
                   className="w-44 h-44 object-contain"
@@ -3304,14 +3977,6 @@ export default function App() {
 
             {/* Footer Buttons */}
             <div className="flex gap-2.5 mt-2">
-              <a
-                href={`https://api.qrserver.com/v1/create-qr-code/?size=500x500&data=${encodeURIComponent(`${window.location.origin}/?project=${shareId}`)}`}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="flex-1 py-2.5 rounded-xl border border-slate-200 hover:bg-slate-50 text-slate-600 font-bold text-xs text-center transition-all flex items-center justify-center"
-              >
-                {lang === "ar" ? "عرض كود QR كبير" : "Open Large QR"}
-              </a>
               <button
                 onClick={() => setShowShareModal(false)}
                 className="flex-1 py-2.5 bg-slate-900 hover:bg-slate-800 text-white font-bold text-xs rounded-xl transition-all cursor-pointer"

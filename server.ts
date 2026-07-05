@@ -1204,6 +1204,41 @@ app.get("/api/shelter/project/:id", (req, res) => {
   }
 });
 
+// Route to fetch dynamic occupancy data for camp units
+app.get("/api/shelter/occupancy", (req, res) => {
+  try {
+    const projectId = (req.query.projectId as string) || "draft";
+    const peopleCount = parseInt(req.query.peopleCount as string) || 80;
+    const capacity = parseInt(req.query.capacity as string) || 6;
+    const totalUnits = parseInt(req.query.totalUnits as string) || 12;
+
+    const occupancies = [];
+    for (let i = 0; i < totalUnits; i++) {
+      const hash = (i * 7 + 13) % 11;
+      // Adding a dynamic element to the occupancy number to simulate real-time updates
+      const randomShift = Math.floor(Math.random() * 3) - 1; // -1, 0, or +1
+      const baseOccupancy = Math.max(2, Math.min(capacity, (peopleCount % 3 === 0) ? (capacity - (hash % 3)) : (capacity - (hash % 2))));
+      const currentOccupancy = Math.max(1, Math.min(capacity, baseOccupancy + randomShift));
+      
+      occupancies.push({
+        unitIndex: i,
+        occupancy: currentOccupancy,
+        capacity: capacity,
+        label: `${currentOccupancy}/${capacity}`
+      });
+    }
+
+    res.json({
+      projectId,
+      occupancies,
+      timestamp: new Date().toISOString()
+    });
+  } catch (err: any) {
+    console.error("Error retrieving dynamic occupancy:", err);
+    res.status(500).json({ error: err.message || "Failed to retrieve dynamic occupancy" });
+  }
+});
+
 // Configure Vite and Express integration
 async function startServer() {
   if (process.env.NODE_ENV !== "production") {
