@@ -43,7 +43,9 @@ function generateHeuristicProject(input: any) {
     localMaterials = [],
     durationOfUse = "6 أشهر",
     language = "ar",
-    designType = "camp"
+    designType = "camp",
+    useSustainableMaterials = false,
+    lowCostOptimization = false
   } = input;
 
   const isEn = language === "en";
@@ -121,6 +123,24 @@ function generateHeuristicProject(input: any) {
       roofType = "sloped";
       insulation = "بوليسترين مقذوف بسماكة 7.5 سم مدمج ومقاوم للتسرب الحراري وامتصاص المياه";
       facadeDesc = "صاج مجلفن مطلي ومقاوم للصدأ مع فتحات تهوية علوية منظمة للضغط الداخلي";
+    }
+  }
+
+  if (useSustainableMaterials) {
+    if (isEn) {
+      modelName = "Bio-Resilient Eco-Shelter (Bamboo & Clay)";
+      techStyle = "Low-carbon local timber and structural bamboo framework with natural bio-binders";
+      foundationType = "Rammed-earth plinth fortified with natural local clay and gravel drainage bed";
+      roofType = "sloped";
+      insulation = "Thatch, straw-bale core, and local clay-adobe plastering (R-14) for organic thermal control";
+      facadeDesc = "Woven bamboo screens combined with non-toxic earth-clay plaster sealing";
+    } else {
+      modelName = "مأوى بيئي مستدام (خيزران وطين طبيعي)";
+      techStyle = "هيكل من الخيزران (البامبو) والأخشاب المحلية المعالجة هندسياً مع روابط عضوية";
+      foundationType = "قاعدة من الطين المرصوص والمثبت بالحصى الطبيعي لكسر الرطوبة دون الحاجة للخرسانة";
+      roofType = "sloped";
+      insulation = "قش مضغوط وألواح الطين المشوي والكتان الطبيعي للعزل الحراري والرطوبي المتكامل";
+      facadeDesc = "كسوة من ضفائر الخيزران المغطاة بلياسة طينية طبيعية مسامية مقاومة للمطر";
     }
   }
 
@@ -467,75 +487,205 @@ function generateHeuristicProject(input: any) {
   }
 
   // Material list calculation
-  const totalMaterialCostPerUnit = 1200;
-  const materialsCost = totalUnitsNeeded * totalMaterialCostPerUnit + 2500; // units + communal
+  const isLowCostActive = lowCostOptimization && Number(peopleCount) >= 250;
+
+  let billOfMaterials = [];
+  if (isLowCostActive) {
+    billOfMaterials = [
+      {
+        category: isEn ? "Structural Framing" : "الهيكل الإنشائي",
+        material: isEn ? "Recycled construction-grade wood studs and light timber framing" : "أعمدة وأخشاب البناء الخفيفة والقصيرة مع زوايا تدعيم بسيطة",
+        quantity: totalUnitsNeeded * 10,
+        unit: "piece",
+        estimatedUnitPrice: 15,
+        totalPrice: totalUnitsNeeded * 10 * 15,
+        localSourcingPossible: true,
+        sourcingNotes: isEn ? "Sourced in bulk from nearby salvage and demolition yards." : "أخشاب بناء قياسية منخفضة التكلفة يمكن توريدها بكميات ضخمة من مخلفات الهدم القريبة."
+      },
+      {
+        category: isEn ? "Insulation & Finishes" : "العزل والتشطيب",
+        material: isEn ? "Heavy-duty UV-stabilized woven tarpaulin covers & recycled cardboard padding" : "شوادر مشمعات سميكة مقاومة للشمس والمطر مع طبقة داخلية من الكرتون المقوى للعزل",
+        quantity: totalUnitsNeeded * 12,
+        unit: "sheet",
+        estimatedUnitPrice: 8,
+        totalPrice: totalUnitsNeeded * 12 * 8,
+        localSourcingPossible: true,
+        sourcingNotes: isEn ? "Highly economical, reusable covers readily stocked by UNHCR." : "شوادر مشمعات شديدة الاقتصادية وسهلة النقل والتركيب، متوفرة بكثرة بمخازن المساعدات."
+      },
+      {
+        category: isEn ? "Doors & Windows" : "الأبواب والنوافذ",
+        material: isEn ? "Simple wooden door panel with manually bent latch pins" : "أبواب خشبية بسيطة (عاكسة للغبار) مع مغاليق ومفصلات حديدية يدوية الصنع",
+        quantity: totalUnitsNeeded,
+        unit: "piece",
+        estimatedUnitPrice: 20,
+        totalPrice: totalUnitsNeeded * 20,
+        localSourcingPossible: true,
+        sourcingNotes: isEn ? "Fabricated quickly using local plywood offcuts." : "يتم تجميعها محلياً في الموقع باستخدام ألواح الأبلكاش البسيطة والورش الميدانية."
+      },
+      {
+        category: isEn ? "Doors & Windows" : "الأبواب والنوافذ",
+        material: isEn ? "Woven mesh ventilation flaps with velcro tiebacks" : "فتحات تهوية علوية مزودة بشبك سلكي ناعم وأشرطة فيلكرو سهلة الفتح والإغلاق",
+        quantity: totalUnitsNeeded * 2,
+        unit: "piece",
+        estimatedUnitPrice: 5,
+        totalPrice: totalUnitsNeeded * 2 * 5,
+        localSourcingPossible: true,
+        sourcingNotes: isEn ? "Low-cost protection from dust and flies manufactured in minutes." : "فتحات بسيطة للغاية لتهوية وتبريد المأوى وصنع الحماية الميدانية."
+      },
+      {
+        category: isEn ? "Sanitary & Electrical" : "التمديدات الصحية والكهربائية",
+        material: isEn ? "Gravity-fed shared HDPE piping and communal trench latrines" : "أنابيب مياه HDPE وتجهيزات حمامات خندقية مشتركة مسبقة التجهيز",
+        quantity: totalUnitsNeeded,
+        unit: "set",
+        estimatedUnitPrice: 40,
+        totalPrice: totalUnitsNeeded * 40,
+        localSourcingPossible: true,
+        sourcingNotes: isEn ? "Communal configuration reducing pipe runs and keeping material cost minimal." : "حمامات وصرف مشترك يقلل أطوال المواسير المطلوبة ويوفر التكلفة بشكل هائل."
+      },
+      {
+        category: isEn ? "Foundations & Connectors" : "الأساسات والأدوات والتثبيت",
+        material: isEn ? "Reclaimed metal stakes, wire lashings, and general wood screws" : "أوتاد معدنية مستصلحة، حبال من السلك المجلفن والبراغي العادية للتثبيت السريع",
+        quantity: totalUnitsNeeded * 150,
+        unit: "piece",
+        estimatedUnitPrice: 0.3,
+        totalPrice: Math.round(totalUnitsNeeded * 150 * 0.3),
+        localSourcingPossible: true,
+        sourcingNotes: isEn ? "Basic fasteners to securely bind joints and prevent movement." : "براغي ومسامير وأوتاد مستصلحة يسهل شراؤها من خردة الأسواق المحلية."
+      }
+    ];
+  } else if (useSustainableMaterials) {
+    billOfMaterials = [
+      {
+        category: isEn ? "Structural Framing" : "الهيكل الإنشائي",
+        material: isEn ? "High-tensile structural bamboo culms & flexible plant-fiber lashing ropes" : "سيقان الخيزران الإنشائي عالي المقاومة مع حبال الألياف النباتية المرنة للتربيط",
+        quantity: totalUnitsNeeded * 24,
+        unit: "piece",
+        estimatedUnitPrice: 12,
+        totalPrice: totalUnitsNeeded * 24 * 12,
+        localSourcingPossible: true,
+        sourcingNotes: isEn ? "Abundantly grown locally, promoting renewable agroforestry and community livelihoods." : "متوفر بكثرة محلياً وينمو بسرعة، ويدعم الاقتصاد والعمالة المحلية."
+      },
+      {
+        category: isEn ? "Insulation & Finishes" : "العزل والتشطيب",
+        material: isEn ? "Local sun-dried clay adobe blocks & natural straw-bale insulating plaster" : "قوالب الطوب الطيني المجفف بالشمس ولياسة الطين والقش الطبيعي العازل للحرارة",
+        quantity: totalUnitsNeeded * 120,
+        unit: "block",
+        estimatedUnitPrice: 1.5,
+        totalPrice: totalUnitsNeeded * 120 * 1.5,
+        localSourcingPossible: true,
+        sourcingNotes: isEn ? "Sourced from local clay deposits and agricultural straw residue, completely carbon-neutral." : "مستخلص بالكامل من التربة المحلية وبقايا القش الزراعي، صفر بصمة كربونية."
+      },
+      {
+        category: isEn ? "Doors & Windows" : "الأبواب والنوافذ",
+        material: isEn ? "Reclaimed local timber doors and window shutters with wooden latches" : "أبواب ونوافذ من الخشب المحلي المعاد تدويره مع مغاليق وأقفال خشبية بسيطة",
+        quantity: totalUnitsNeeded,
+        unit: "piece",
+        estimatedUnitPrice: 40,
+        totalPrice: totalUnitsNeeded * 40,
+        localSourcingPossible: true,
+        sourcingNotes: isEn ? "Sourced and assembled by nearby carpenter workshops using salvaged timber." : "يتم تصنيعها وتجميعها في ورش النجارة المحلية باستخدام أخشاب مستصلحة."
+      },
+      {
+        category: isEn ? "Doors & Windows" : "الأبواب والنوافذ",
+        material: isEn ? "Woven bamboo screen window panels with insect-proof jute mesh" : "مظلات نوافذ مصنعة من ضفائر الخيزران مزودة بشبك من ألياف الجوت الطاردة للحشرات",
+        quantity: totalUnitsNeeded * 2,
+        unit: "piece",
+        estimatedUnitPrice: 10,
+        totalPrice: totalUnitsNeeded * 2 * 10,
+        localSourcingPossible: true,
+        sourcingNotes: isEn ? "100% biodegradable and hand-woven by local artisans." : "منتج يدوي محلي صديق للبيئة وقابل للتحلل بالكامل."
+      },
+      {
+        category: isEn ? "Sanitary & Electrical" : "التمديدات الصحية والكهربائية",
+        material: isEn ? "Clay-pot filter units and gravity-fed bamboo plumbing/drainage channels" : "وحدات تصفية المياه الفخارية وقنوات سباكة/تصريف مصنوعة من جذوع الخيزران المجوفة",
+        quantity: totalUnitsNeeded,
+        unit: "piece",
+        estimatedUnitPrice: 35,
+        totalPrice: totalUnitsNeeded * 35,
+        localSourcingPossible: true,
+        sourcingNotes: isEn ? "Utilizes traditional pottery filter crafts and natural hollow bamboo tubes." : "تعتمد على الفخار المحلي وقنوات الخيزران الطبيعية المستدامة لتوزيع المياه."
+      },
+      {
+        category: isEn ? "Foundations & Connectors" : "الأساسات والأدوات والتثبيت",
+        material: isEn ? "Rammed earth foundation bases with local gravel and timber anchor piles" : "قواعد تثبيت من الطين المرصوص والحصى الميداني وأوتاد التثبيت الخشبية",
+        quantity: totalUnitsNeeded * 4,
+        unit: "set",
+        estimatedUnitPrice: 25,
+        totalPrice: totalUnitsNeeded * 4 * 25,
+        localSourcingPossible: true,
+        sourcingNotes: isEn ? "Eliminates high-carbon cement; relies on local gravel and hand-compacted soil stabilization." : "يغني تماماً عن استخدام الأسمنت عالي الانبعاثات؛ يعتمد على الطين والحصى المرصوص يدوياً."
+      }
+    ];
+  } else {
+    billOfMaterials = [
+      {
+        category: isEn ? "Structural Framing" : "الهيكل الإنشائي",
+        material: isEn ? "Heavy-duty structural framing posts & connectors" : "أعمدة وقواطع الهيكل الإنشائي الرئيسي المقاوم للرياح والاهتزازات",
+        quantity: totalUnitsNeeded * 12,
+        unit: "piece",
+        estimatedUnitPrice: 35,
+        totalPrice: totalUnitsNeeded * 12 * 35,
+        localSourcingPossible: true,
+        sourcingNotes: isEn ? "Easily sourced from regional timber/metal yards." : "متوفر في مستودعات المواد والحديد بالمنطقة المجاورة."
+      },
+      {
+        category: isEn ? "Insulation & Finishes" : "العزل والتشطيب",
+        material: isEn ? "Weatherproof double-sided composite insulation panels" : "ألواح العزل الحراري والرطوبي المزدوجة والمقاومة للمياه والحرارة",
+        quantity: totalUnitsNeeded * 32,
+        unit: "sheet",
+        estimatedUnitPrice: 20,
+        totalPrice: totalUnitsNeeded * 32 * 20,
+        localSourcingPossible: false,
+        sourcingNotes: isEn ? "Recommended central warehouse dispatch for quality assurance." : "يفضل شحنها من المستودعات المركزية لضمان كفاءة العزل الحراري."
+      },
+      {
+        category: isEn ? "Doors & Windows" : "الأبواب والنوافذ",
+        material: isEn ? "Pre-hung exterior metal doors with double latches" : "أبواب معدنية خارجية مسبقة التجهيز مع مفصلات وأقفال أمان مزدوجة",
+        quantity: totalUnitsNeeded,
+        unit: "piece",
+        estimatedUnitPrice: 75,
+        totalPrice: totalUnitsNeeded * 75,
+        localSourcingPossible: true,
+        sourcingNotes: isEn ? "Can be assembled using local workshops." : "يمكن تصنيعها أو شراؤها مباشرة من الورش المحلية لتسريع التشييد."
+      },
+      {
+        category: isEn ? "Doors & Windows" : "الأبواب والنوافذ",
+        material: isEn ? "Polycarbonate ventilation windows with mesh screen" : "نوافذ تهوية بولي كربونيت مقاومة للكسر مع شبك سلكي للحماية من الحشرات",
+        quantity: totalUnitsNeeded * 2,
+        unit: "piece",
+        estimatedUnitPrice: 25,
+        totalPrice: totalUnitsNeeded * 2 * 25,
+        localSourcingPossible: true,
+        sourcingNotes: isEn ? "Readily available locally in commercial markets." : "نوافذ خفيفة الوزن وسهلة التثبيت متوفرة بكثرة في السوق المحلي."
+      },
+      {
+        category: isEn ? "Sanitary & Electrical" : "التمديدات الصحية والكهربائية",
+        material: isEn ? "Integrated piping, water storage unit, and low-flow plumbing" : "تمديدات السباكة والمواسير والقطع الصحية الموفرة للمياه مع خزان ملحق",
+        quantity: totalUnitsNeeded,
+        unit: "bag",
+        estimatedUnitPrice: 110,
+        totalPrice: totalUnitsNeeded * 110,
+        localSourcingPossible: true,
+        sourcingNotes: isEn ? "Standard plumbing items available in any trade center." : "مستلزمات صحية قياسية يسهل تأمينها من محلات السباكة المحلية."
+      },
+      {
+        category: isEn ? "Foundations & Connectors" : "الأساسات والأدوات والتثبيت",
+        material: isEn ? "Soil anchor pins, heavy-duty bracket ties, and screws" : "أوتاد تثبيت أرضية فولاذية، زوايا تثبيت وهياكل الربط المتكاملة والبراغي",
+        quantity: totalUnitsNeeded * 250,
+        unit: "piece",
+        estimatedUnitPrice: 0.8,
+        totalPrice: Math.round(totalUnitsNeeded * 250 * 0.8),
+        localSourcingPossible: true,
+        sourcingNotes: isEn ? "Standard fasteners. Essential to purchase in bulk." : "براغي تثبيت قياسية مجلفنة يفضل شراؤها بالجملة لتقليل التكاليف."
+      }
+    ];
+  }
+
+  const materialsCost = billOfMaterials.reduce((acc, item) => acc + item.totalPrice, 0) + (isLowCostActive ? 500 : useSustainableMaterials ? 1000 : 2500); // units + communal
   const laborCost = Math.round(materialsCost * 0.25);
   const transportCost = Math.round(materialsCost * 0.15);
   const contingencyCost = Math.round((materialsCost + laborCost + transportCost) * 0.10);
   const totalCost = materialsCost + laborCost + transportCost + contingencyCost;
-
-  const billOfMaterials = [
-    {
-      category: isEn ? "Structural Framing" : "الهيكل الإنشائي",
-      material: isEn ? "Heavy-duty structural framing posts & connectors" : "أعمدة وقواطع الهيكل الإنشائي الرئيسي المقاوم للرياح والاهتزازات",
-      quantity: totalUnitsNeeded * 12,
-      unit: "piece",
-      estimatedUnitPrice: 35,
-      totalPrice: totalUnitsNeeded * 12 * 35,
-      localSourcingPossible: true,
-      sourcingNotes: isEn ? "Easily sourced from regional timber/metal yards." : "متوفر في مستودعات المواد والحديد بالمنطقة المجاورة."
-    },
-    {
-      category: isEn ? "Insulation & Finishes" : "العزل والتشطيب",
-      material: isEn ? "Weatherproof double-sided composite insulation panels" : "ألواح العزل الحراري والرطوبي المزدوجة والمقاومة للمياه والحرارة",
-      quantity: totalUnitsNeeded * 32,
-      unit: "sheet",
-      estimatedUnitPrice: 20,
-      totalPrice: totalUnitsNeeded * 32 * 20,
-      localSourcingPossible: false,
-      sourcingNotes: isEn ? "Recommended central warehouse dispatch for quality assurance." : "يفضل شحنها من المستودعات المركزية لضمان كفاءة العزل الحراري."
-    },
-    {
-      category: isEn ? "Doors & Windows" : "الأبواب والنوافذ",
-      material: isEn ? "Pre-hung exterior metal doors with double latches" : "أبواب معدنية خارجية مسبقة التجهيز مع مفصلات وأقفال أمان مزدوجة",
-      quantity: totalUnitsNeeded,
-      unit: "piece",
-      estimatedUnitPrice: 75,
-      totalPrice: totalUnitsNeeded * 75,
-      localSourcingPossible: true,
-      sourcingNotes: isEn ? "Can be assembled using local workshops." : "يمكن تصنيعها أو شراؤها مباشرة من الورش المحلية لتسريع التشييد."
-    },
-    {
-      category: isEn ? "Doors & Windows" : "الأبواب والنوافذ",
-      material: isEn ? "Polycarbonate ventilation windows with mesh screen" : "نوافذ تهوية بولي كربونيت مقاومة للكسر مع شبك سلكي للحماية من الحشرات",
-      quantity: totalUnitsNeeded * 2,
-      unit: "piece",
-      estimatedUnitPrice: 25,
-      totalPrice: totalUnitsNeeded * 2 * 25,
-      localSourcingPossible: true,
-      sourcingNotes: isEn ? "Readily available locally in commercial markets." : "نوافذ خفيفة الوزن وسهلة التثبيت متوفرة بكثرة في السوق المحلي."
-    },
-    {
-      category: isEn ? "Sanitary & Electrical" : "التمديدات الصحية والكهربائية",
-      material: isEn ? "Integrated piping, water storage unit, and low-flow plumbing" : "تمديدات السباكة والمواسير والقطع الصحية الموفرة للمياه مع خزان ملحق",
-      quantity: totalUnitsNeeded,
-      unit: "bag",
-      estimatedUnitPrice: 110,
-      totalPrice: totalUnitsNeeded * 110,
-      localSourcingPossible: true,
-      sourcingNotes: isEn ? "Standard plumbing items available in any trade center." : "مستلزمات صحية قياسية يسهل تأمينها من محلات السباكة المحلية."
-    },
-    {
-      category: isEn ? "Foundations & Connectors" : "الأساسات والأدوات والتثبيت",
-      material: isEn ? "Soil anchor pins, heavy-duty bracket ties, and screws" : "أوتاد تثبيت أرضية فولاذية، زوايا تثبيت وهياكل الربط المتكاملة والبراغي",
-      quantity: totalUnitsNeeded * 250,
-      unit: "piece",
-      estimatedUnitPrice: 0.8,
-      totalPrice: Math.round(totalUnitsNeeded * 250 * 0.8),
-      localSourcingPossible: true,
-      sourcingNotes: isEn ? "Standard fasteners. Essential to purchase in bulk." : "براغي تثبيت قياسية مجلفنة يفضل شراؤها بالجملة لتقليل التكاليف."
-    }
-  ];
 
   // Timeline
   const timeline = [
@@ -783,7 +933,9 @@ app.post("/api/shelter/generate", async (req, res) => {
       childrenCount,
       elderlyCount,
       disabledCount,
-      language
+      language,
+      useSustainableMaterials,
+      lowCostOptimization
     } = input;
 
     const isEn = language === "en";
@@ -860,10 +1012,26 @@ Engineering & Structural Requirements:
 6. الميزانية التقديرية (Budget): تحليل للتكاليف يتناسب منطقياً مع جدول المواد والأيدي العاملة والنقل ومصاريف الطوارئ.
 7. تحليل المخاطر ودرجة الأمان: تحليل آلي للمخاطر في الموقع يغطي 7 معايير أساسية: اتجاه الرياح، احتمالية الفيضانات، مخاطر الانهيارات الأرضية، شدة الزلازل المتوقعة، درجة الحرارة الموسمية، مستوى المياه الجوفية، وقرب الموقع من مجاري السيول. احسب درجة أمان نهائية للموقع (Safety Score) من 100 وقدم توصيات هندسية آمنة للتعامل مع أي مخاطر مرصودة.`;
 
+    let sustainablePromptInstruction = "";
+    if (useSustainableMaterials) {
+      sustainablePromptInstruction = isEn
+        ? `\n\nCRITICAL REQUIREMENT - SUSTAINABLE MATERIALS ENABLED:\nThe user has enabled "Sustainable Materials". You MUST strictly modify your Bill of Materials generation and design logic:\n- Prioritize natural, organic, and ultra-low-carbon local materials such as Bamboo, Local Clay, Adobe bricks, mud-plaster, straw-bale insulation, and salvaged local timber over steel, PVC, aluminum, or concrete.\n- In the "billOfMaterials" array, ensure that structural framing items specify "bamboo" or "sustainable timber", insulation specifies "clay/adobe" or "straw-bale", and foundations specify "rammed earth" or "timber piles" instead of concrete or steel.\n- Sourcing notes should emphasize the environmental and local economic benefits of these renewable resources.`
+        : `\n\nشرط حرج - تفعيل المواد المستدامة (Sustainable Materials):\nلقد قام المستخدم بتفعيل خيار "المواد المستدامة". يجب عليك تعديل منطق توليد قائمة المواد والتصميم بشكل كامل:\n- إعطاء الأولوية القصوى للمواد الطبيعية والعضوية ذات البصمة الكربونية المنخفضة جداً مثل الخيزران (البامبو)، الطين الطبيعي، الطوب الطيني (اللبن)، القش، والكتان، والأخشاب المحلية بدلاً من استخدام الهياكل الفولاذية، الخرسانة الأسمنتية، أو ألواح البوليسترين والألومنيوم.\n- في جدول الكميات "billOfMaterials"، تأكد من أن الهيكل الإنشائي يحدد "الخيزران" أو "الخشب المستدام"، والعزل يحدد "اللياسة الطينية" أو "القش المضغوط"، والأساسات تحدد "الطين المرصوص" أو "الأوتاد الخشبية" بدلاً من الخرسانة والحديد.\n- يجب أن تركز ملاحظات التوريد على الفوائد البيئية والاقتصادية المحلية لاستخدام هذه الموارد المتجددة.`;
+    }
+
+    let lowCostPromptInstruction = "";
+    if (lowCostOptimization && Number(peopleCount) >= 250) {
+      lowCostPromptInstruction = isEn
+        ? `\n\nCRITICAL REQUIREMENT - LOW-COST OPTIMIZATION ENABLED (Population exceeds 250):\nThe user has enabled "Low-Cost Optimization" due to high population count. You MUST strictly modify your Bill of Materials generation and design logic to prioritize ultra-low-budget material alternatives:\n- Prioritize extremely low-cost, mass-producible local materials (e.g., recycled construction-grade wood studs, reclaimed timber, light tarpaulins, simple plastic sheeting, and compressed earth blocks) over expensive or high-end items.\n- In the "billOfMaterials" array, adjust the unit prices (estimatedUnitPrice) downwards, replacing premium materials with low-budget options like "Corrugated metal sheet", "Tarpaulins", or "Reclaimed wooden frames" to optimize the total cost dramatically.\n- Sourcing notes should explain that this reduces costs to allow scaling up for a high-volume population.`
+        : `\n\nشرط حرج - تفعيل تحسين التكلفة المنخفضة (عندما يتجاوز عدد السكان 250 نسمة):\nلقد قام المستخدم بتفعيل خيار "تحسين التكلفة المنخفضة" نظراً للعدد الكبير من الأشخاص المخطط إيواؤهم. يجب عليك تعديل منطق توليد قائمة المواد والتصميم بشكل كامل لتفضيل بدائل المواد الاقتصادية جداً (Ultra-Low-Budget):\n- إعطاء الأولوية القصوى للمواد شديدة الانخفاض في التكلفة وسهلة الإنتاج بكميات كبيرة (مثل ألواح الصاج المموج المعاد تدويره، شوادر المشمعات السميكة المقاومة للمياه، أخشاب البناء العادية، الحصى، وقوالب التربة المضغوطة) بدلاً من المواد الفاخرة أو المستوردة عالية التكلفة.\n- في جدول الكميات "billOfMaterials"، تأكد من تعديل الأسعار الفردية لتصبح منخفضة واقتصادية، واستبدال المواد المكلفة بخيارات اقتصادية مثل "صاج مموج"، "مشمعات حماية عازلة (Tarpaulins)"، أو "أخشاب بناء عادية" لخفض التكلفة الإجمالية بشكل جذري.\n- يجب أن توضح ملاحظات التوريد أن هذا التعديل يهدف لتوفير ميزانية الإيواء لمواجهة الأعداد الكبيرة والمكتظة.`;
+    }
+
+    const finalUserPrompt = userPrompt + sustainablePromptInstruction + lowCostPromptInstruction;
+
     try {
       const response = await ai.models.generateContent({
         model: "gemini-3.5-flash",
-        contents: userPrompt,
+        contents: finalUserPrompt,
         config: {
           systemInstruction,
           responseMimeType: "application/json",
@@ -1236,6 +1404,174 @@ app.get("/api/shelter/occupancy", (req, res) => {
   } catch (err: any) {
     console.error("Error retrieving dynamic occupancy:", err);
     res.status(500).json({ error: err.message || "Failed to retrieve dynamic occupancy" });
+  }
+});
+
+// Route to parse voice-to-text transcripts for fast field entry
+app.post("/api/voice/parse", async (req, res) => {
+  try {
+    const { transcript, language } = req.body;
+    if (!transcript) {
+      res.status(400).json({ error: "No transcript provided" });
+      return;
+    }
+
+    const isEn = language === "en";
+
+    // If Gemini is available, use it for intelligent parsing
+    if (ai) {
+      const systemInstruction = `You are a field-assistant NLP parser for an emergency shelter planning platform. 
+Parse the following raw text (which can be in Arabic or English) into three fields: locationName, disasterType, and peopleCount.
+
+Disaster mapping rules:
+If language is "ar" (or text is Arabic), disasterType MUST be exactly one of these:
+- "زلزال"
+- "فيضان"
+- "إعصار"
+- "حرائق غابات"
+- "صراع / نزوح"
+- "موجة حر شديدة"
+- "موجة برد وقرصة شتاء"
+
+If language is "en", disasterType MUST be exactly one of these:
+- "Earthquake"
+- "Flood"
+- "Hurricane/Cyclone"
+- "Wildfire"
+- "Conflict / Displacement"
+- "Extreme Heatwave"
+- "Extreme Cold / Winter Blizzard"
+
+Try to map the spoken disaster type to the closest match from the list above. If nothing matches, or if it is ambiguous, set disasterType to "".
+For peopleCount, extract any mention of a number representing the population or people needing shelter. Convert spoken numbers (e.g. "five hundred", "خمسمائة", "ألفين") to integers.
+For locationName, extract the name of the city, region, town, or country mentioned.
+
+Return a JSON object conforming to this schema:
+{
+  "locationName": string,
+  "disasterType": string,
+  "peopleCount": number | null
+}`;
+
+      const userMessage = `Transcript: "${transcript}"\nTarget Language: "${language}"`;
+
+      try {
+        const response = await ai.models.generateContent({
+          model: "gemini-3.5-flash",
+          contents: userMessage,
+          config: {
+            systemInstruction,
+            responseMimeType: "application/json",
+            temperature: 0.1
+          }
+        });
+
+        const text = response.text || "{}";
+        const parsed = JSON.parse(text);
+        res.json({
+          success: true,
+          locationName: parsed.locationName || "",
+          disasterType: parsed.disasterType || "",
+          peopleCount: parsed.peopleCount || null,
+          engine: "gemini"
+        });
+        return;
+      } catch (geminiErr) {
+        console.error("Gemini voice parsing failed, falling back to heuristics:", geminiErr);
+      }
+    }
+
+    // Heuristics Fallback (if Gemini fails or is not configured)
+    let locationName = "";
+    let disasterType = "";
+    let peopleCount: number | null = null;
+
+    // Extacting number using regex (handles Arabic and English digits)
+    const arabicDigits: Record<string, string> = {"٠":"0","١":"1","٢":"2","٣":"3","٤":"4","٥":"5","٦":"6","٧":"7","٨":"8","٩":"9"};
+    let textToAnalyze = transcript.toLowerCase();
+    
+    // Convert Arabic digits to English digits
+    for (const [key, val] of Object.entries(arabicDigits)) {
+      textToAnalyze = textToAnalyze.split(key).join(val);
+    }
+
+    const numberMatch = textToAnalyze.match(/\d+/);
+    if (numberMatch) {
+      peopleCount = parseInt(numberMatch[0]);
+    } else {
+      // Basic English spoken number heuristics
+      if (textToAnalyze.includes("hundred") || textToAnalyze.includes("مئة") || textToAnalyze.includes("مائة")) {
+        const engNums: Record<string, number> = { "one": 1, "two": 2, "three": 3, "four": 4, "five": 5, "six": 6, "seven": 7, "eight": 8, "nine": 9 };
+        const arbNums: Record<string, number> = { "واحد": 1, "اثنين": 2, "ثلاث": 3, "أربع": 4, "خمس": 5, "ست": 6, "سبع": 7, "ثمان": 8, "تسع": 9 };
+        for (const [name, val] of Object.entries(engNums)) {
+          if (textToAnalyze.includes(name)) {
+            peopleCount = val * 100;
+            break;
+          }
+        }
+        if (!peopleCount) {
+          for (const [name, val] of Object.entries(arbNums)) {
+            if (textToAnalyze.includes(name)) {
+              peopleCount = val * 100;
+              break;
+            }
+          }
+        }
+      }
+      if (textToAnalyze.includes("thousand") || textToAnalyze.includes("ألف")) {
+        peopleCount = 1000;
+      }
+    }
+
+    // Disaster mapping heuristic
+    const disasterOptionsAr = [
+      { key: "زلزال", terms: ["زلزال", "هزة", "ارضية", "أرضية", "earthquake", "quake"] },
+      { key: "فيضان", terms: ["فيضان", "سيول", "امطار", "أمطار", "flood", "flooding", "water"] },
+      { key: "إعصار", terms: ["إعصار", "اعصار", "رياح قوية", "عاصفة", "hurricane", "cyclone", "storm", "wind"] },
+      { key: "حرائق غابات", terms: ["حريق", "حرائق", "غابة", "غابات", "نار", "wildfire", "fire"] },
+      { key: "صراع / نزوح", terms: ["نزوح", "صراع", "حرب", "لاجئين", "لاجئ", "conflict", "displacement", "war", "refugees"] },
+      { key: "موجة حر شديدة", terms: ["حر", "صيف", "موجة حر", "شديدة", "heatwave", "heat"] },
+      { key: "موجة برد وقرصة شتاء", terms: ["برد", "شتاء", "ثلج", "قرصة شتاء", "cold", "winter", "blizzard", "freeze"] }
+    ];
+
+    const disasterOptionsEn = [
+      { key: "Earthquake", terms: ["earthquake", "quake", "زلزال", "هزة"] },
+      { key: "Flood", terms: ["flood", "flooding", "water", "فيضان", "سيول"] },
+      { key: "Hurricane/Cyclone", terms: ["hurricane", "cyclone", "storm", "wind", "إعصار", "اعصار"] },
+      { key: "Wildfire", terms: ["wildfire", "fire", "forest fire", "حرائق", "حريق"] },
+      { key: "Conflict / Displacement", terms: ["conflict", "displacement", "refugees", "war", "صراع", "نزوح"] },
+      { key: "Extreme Heatwave", terms: ["heatwave", "heat", "hot", "حر", "موجة حر"] },
+      { key: "Extreme Cold / Winter Blizzard", terms: ["cold", "winter", "blizzard", "snow", "freeze", "برد", "ثلج"] }
+    ];
+
+    const targetDisasterList = isEn ? disasterOptionsEn : disasterOptionsAr;
+    for (const item of targetDisasterList) {
+      if (item.terms.some(term => textToAnalyze.includes(term))) {
+        disasterType = item.key;
+        break;
+      }
+    }
+
+    // Location extraction heuristic
+    const arLocMatches = transcript.match(/(في|بمنطقة|بمدينة)\s+([\u0600-\u06FF\s]+)/i);
+    const enLocMatches = transcript.match(/in\s+([a-zA-Z\s]+)/i);
+
+    if (arLocMatches && arLocMatches[2]) {
+      locationName = arLocMatches[2].split(" ")[0].trim();
+    } else if (enLocMatches && enLocMatches[1]) {
+      locationName = enLocMatches[1].split(" ")[0].trim();
+    }
+
+    res.json({
+      success: true,
+      locationName,
+      disasterType,
+      peopleCount,
+      engine: "heuristics"
+    });
+  } catch (err: any) {
+    console.error("Voice parsing route failed:", err);
+    res.status(500).json({ error: err.message || "Voice parsing failed" });
   }
 });
 

@@ -17,7 +17,9 @@ import {
   FileSpreadsheet, 
   Share2, 
   Grid,
+  QrCode,
   TrendingUp,
+  Coins,
   Search,
   Filter,
   Info,
@@ -40,7 +42,8 @@ import {
   Apple,
   HeartPulse,
   Heart,
-  Building2
+  Building2,
+  Mic
 } from "lucide-react";
 import { ShelterProject, ProjectInput } from "./types";
 import { translations } from "./locales";
@@ -55,6 +58,7 @@ import { EvacuationSimulationView } from "./components/EvacuationSimulationView"
 import { AdvancedPlanningEngine } from "./components/AdvancedPlanningEngine";
 import { RiskAlertBanner } from "./components/RiskAlertBanner";
 import { ResponsiveContainer, LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend } from "recharts";
+import { motion } from "motion/react";
 
 // @ts-ignore
 import imgEarthquake from "./assets/images/shelter_earthquake_1782683719432.jpg";
@@ -636,7 +640,9 @@ export default function App() {
     durationOfUse: t.durationOptions[1],
     childrenCount: 30,
     elderlyCount: 15,
-    disabledCount: 5
+    disabledCount: 5,
+    useSustainableMaterials: false,
+    lowCostOptimization: false
   });
 
   const [project, setProject] = useState<ShelterProject | null>(defaultProjectAr);
@@ -653,6 +659,10 @@ export default function App() {
   const [showShareModal, setShowShareModal] = useState<boolean>(false);
   const [copiedShareLink, setCopiedShareLink] = useState<boolean>(false);
   const [copiedBase64Link, setCopiedBase64Link] = useState<boolean>(false);
+
+  const [voiceStatus, setVoiceStatus] = useState<'idle' | 'listening' | 'parsing' | 'success' | 'error' | 'unsupported'>('idle');
+  const [capturedTranscript, setCapturedTranscript] = useState<string>("");
+  const [voiceErrorMsg, setVoiceErrorMsg] = useState<string>("");
 
   useEffect(() => {
     const params = new URLSearchParams(window.location.search);
@@ -1244,6 +1254,210 @@ export default function App() {
     document.body.removeChild(downloadAnchor);
   };
 
+  // Export Field QR Code as a downloadable PNG
+  const downloadQRCodePNG = () => {
+    if (!project) return;
+    
+    const isEn = lang === "en";
+    const dataString = shareId 
+      ? `${window.location.origin}/?project=${shareId}` 
+      : `${window.location.origin}/?plan=${encodeProjectToBase64(project).substring(0, 1000)}`;
+
+    const qrUrl = `https://api.qrserver.com/v1/create-qr-code/?size=400x400&data=${encodeURIComponent(dataString)}`;
+    
+    const img = new Image();
+    img.crossOrigin = "anonymous";
+    img.src = qrUrl;
+    img.onload = () => {
+      const canvas = document.createElement("canvas");
+      canvas.width = 500;
+      canvas.height = 640;
+      const ctx = canvas.getContext("2d");
+      if (!ctx) return;
+      
+      // Fill canvas background
+      ctx.fillStyle = "#ffffff";
+      ctx.fillRect(0, 0, 500, 640);
+      
+      // Draw outer thin border
+      ctx.strokeStyle = "#cbd5e1"; // slate-300
+      ctx.lineWidth = 4;
+      ctx.strokeRect(10, 10, 480, 620);
+      
+      // Draw Inner design accents
+      ctx.fillStyle = "#0f172a"; // slate-900
+      ctx.fillRect(10, 10, 480, 4); // top banner accent
+      
+      // Header Text (Centered)
+      ctx.fillStyle = "#0f172a"; // slate-900
+      ctx.font = "bold 20px system-ui, -apple-system, sans-serif";
+      ctx.textAlign = "center";
+      const titleText = isEn ? "Field Access QR Code" : "رمز الاستجابة السريعة للوصول الميداني";
+      ctx.fillText(titleText, 250, 45);
+      
+      // Subtitle
+      ctx.fillStyle = "#64748b"; // slate-500
+      ctx.font = "12px system-ui, -apple-system, sans-serif";
+      const subtitleText = isEn 
+        ? "Scan on-site to view real-time architectural plans & BOM" 
+        : "امسح الكود في الموقع لمراجعة المخططات الهندسية وجدول المواد مباشرة";
+      ctx.fillText(subtitleText, 250, 68);
+      
+      // Draw the QR Code image
+      ctx.drawImage(img, 50, 95, 400, 400);
+      
+      // Fine Divider line
+      ctx.beginPath();
+      ctx.moveTo(35, 515);
+      ctx.lineTo(465, 515);
+      ctx.strokeStyle = "#e2e8f0"; // slate-200
+      ctx.lineWidth = 1;
+      ctx.stroke();
+      
+      // Project Title (Bold)
+      ctx.fillStyle = "#1e293b"; // slate-800
+      ctx.font = "bold 13px system-ui, -apple-system, sans-serif";
+      const modelName = project.suggestedModel?.name || (isEn ? "Temporary Shelter Plan" : "مخطط الإيواء المؤقت");
+      ctx.fillText(modelName, 250, 540);
+      
+      // Project Details Meta
+      ctx.fillStyle = "#475569"; // slate-600
+      ctx.font = "11px system-ui, -apple-system, sans-serif";
+      
+      const disaster = project.input?.disasterType || "";
+      const units = project.suggestedModel?.totalUnitsNeeded || 0;
+      const safety = project.siteRiskAssessment?.safetyScore || "N/A";
+      const location = project.input?.locationName || "";
+      
+      const metaLine1 = isEn 
+        ? `Location: ${location}  |  Disaster: ${disaster}`
+        : `الموقع: ${location}  |  نوع الكارثة: ${disaster}`;
+      const metaLine2 = isEn
+        ? `Total Units: ${units}  |  Safety Score: ${safety}/100  |  Date: ${new Date().toLocaleDateString()}`
+        : `إجمالي الوحدات: ${units}  |  معدل الأمان: ${safety}/100  |  التاريخ: ${new Date().toLocaleDateString()}`;
+        
+      ctx.fillText(metaLine1, 250, 565);
+      ctx.fillText(metaLine2, 250, 590);
+      
+      // Footer Branding
+      ctx.fillStyle = "#94a3b8"; // slate-400
+      ctx.font = "bold italic 9px system-ui, -apple-system, sans-serif";
+      const footerText = isEn 
+        ? "Emergency Shelter Engineering Platform" 
+        : "منصة الهندسة التخطيطية لمآوي الطوارئ والإغاثة";
+      ctx.fillText(footerText, 250, 615);
+      
+      // Trigger Image Download
+      const link = document.createElement("a");
+      link.download = `field-access-qr-${project.id || 'plan'}.png`;
+      link.href = canvas.toDataURL("image/png");
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+    };
+    
+    img.onerror = (err) => {
+      console.error("Failed to fetch QR code from QRServer, downloading raw link as fallback", err);
+      // Fallback: download the raw URL or open in new window
+      const link = document.createElement("a");
+      link.download = `field-access-qr-${project.id || 'plan'}.png`;
+      link.href = qrUrl;
+      link.target = "_blank";
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+    };
+  };
+
+  // Start Web Speech API audio recording & text parsing
+  const startVoiceRecognition = () => {
+    const SpeechRecognition = (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
+    if (!SpeechRecognition) {
+      setVoiceStatus("unsupported");
+      setTimeout(() => setVoiceStatus("idle"), 5000);
+      return;
+    }
+
+    const recognition = new SpeechRecognition();
+    recognition.lang = lang === "ar" ? "ar-SA" : "en-US";
+    recognition.interimResults = false;
+    recognition.maxAlternatives = 1;
+
+    recognition.onstart = () => {
+      setVoiceStatus("listening");
+      setCapturedTranscript("");
+      setVoiceErrorMsg("");
+    };
+
+    recognition.onerror = (event: any) => {
+      console.error("Speech recognition error:", event.error);
+      setVoiceStatus("error");
+      setVoiceErrorMsg(event.error);
+      setTimeout(() => setVoiceStatus("idle"), 5000);
+    };
+
+    recognition.onend = () => {
+      setVoiceStatus((prev) => (prev === "listening" ? "idle" : prev));
+    };
+
+    recognition.onresult = async (event: any) => {
+      const speechToText = event.results[0][0].transcript;
+      if (!speechToText) {
+        setVoiceStatus("error");
+        setTimeout(() => setVoiceStatus("idle"), 5000);
+        return;
+      }
+
+      setCapturedTranscript(speechToText);
+      setVoiceStatus("parsing");
+
+      try {
+        const response = await fetch("/api/voice/parse", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json"
+          },
+          body: JSON.stringify({ transcript: speechToText, language: lang })
+        });
+
+        if (!response.ok) {
+          throw new Error("Voice parse failed");
+        }
+
+        const data = await response.json();
+        if (data.success) {
+          // Success! Populate fields
+          if (data.locationName) {
+            handleInputChange("locationName", data.locationName);
+          }
+          if (data.disasterType) {
+            handleInputChange("disasterType", data.disasterType);
+          }
+          if (data.peopleCount) {
+            handleInputChange("peopleCount", data.peopleCount);
+          }
+          setVoiceStatus("success");
+          setTimeout(() => setVoiceStatus("idle"), 5000);
+        } else {
+          setVoiceStatus("error");
+          setTimeout(() => setVoiceStatus("idle"), 5000);
+        }
+      } catch (err) {
+        console.error("Failed to parse transcript via backend:", err);
+        setVoiceStatus("error");
+        setTimeout(() => setVoiceStatus("idle"), 5000);
+      }
+    };
+
+    try {
+      recognition.start();
+    } catch (startErr) {
+      console.error("Failed to start speech recognition:", startErr);
+      setVoiceStatus("error");
+      setTimeout(() => setVoiceStatus("idle"), 5000);
+    }
+  };
+
   // Load project from Saved configurations list
   const loadSavedProject = (loaded: ShelterProject) => {
     setProject(loaded);
@@ -1354,6 +1568,102 @@ export default function App() {
           </div>
 
           <div className="flex flex-col gap-4">
+            {/* Field Voice Assistant */}
+            <div id="field-voice-assistant-container" className={`border rounded-xl p-3.5 transition-all flex flex-col gap-2 ${
+              voiceStatus === "listening" ? "border-rose-300 bg-rose-50/10 shadow-sm" :
+              voiceStatus === "parsing" ? "border-amber-300 bg-amber-50/10 animate-pulse" :
+              voiceStatus === "success" ? "border-emerald-300 bg-emerald-50/20" :
+              voiceStatus === "error" ? "border-rose-200 bg-rose-50/20" :
+              "border-indigo-100 bg-indigo-50/10"
+            }`}>
+              <div className="flex justify-between items-center gap-2">
+                <div className="flex items-center gap-2">
+                  <div className={`p-1.5 rounded-lg ${
+                    voiceStatus === "listening" ? "bg-rose-100 text-rose-600 animate-pulse" :
+                    voiceStatus === "parsing" ? "bg-amber-100 text-amber-600" :
+                    voiceStatus === "success" ? "bg-emerald-100 text-emerald-600" :
+                    "bg-indigo-50 text-indigo-600"
+                  }`}>
+                    <Mic className={`w-4 h-4 ${voiceStatus === "listening" ? "scale-110 animate-pulse text-rose-600" : "text-indigo-600"}`} />
+                  </div>
+                  <div>
+                    <span className="text-xs font-bold text-slate-800 block leading-tight">
+                      {t.voiceAssistantLabel}
+                    </span>
+                    <span className="text-[9px] text-slate-400 block mt-0.5">
+                      {voiceStatus === "listening" ? "Web Speech API" : "Gemini NLP Extraction"}
+                    </span>
+                  </div>
+                </div>
+
+                {/* Mic Action Button */}
+                <button
+                  id="mic-start-btn"
+                  onClick={startVoiceRecognition}
+                  disabled={voiceStatus === "listening" || voiceStatus === "parsing"}
+                  className={`relative p-2 rounded-full cursor-pointer transition-all flex items-center justify-center ${
+                    voiceStatus === "listening"
+                      ? "bg-rose-500 text-white ring-4 ring-rose-200"
+                      : voiceStatus === "parsing"
+                      ? "bg-amber-500 text-white"
+                      : voiceStatus === "success"
+                      ? "bg-emerald-500 text-white"
+                      : "bg-indigo-600 hover:bg-indigo-700 text-white hover:scale-105 active:scale-95"
+                  }`}
+                  title={t.voiceAssistantIdle}
+                >
+                  <Mic className="w-4 h-4" />
+                  {voiceStatus === "listening" && (
+                    <span className="absolute -inset-1 rounded-full border-2 border-rose-500 animate-ping opacity-75"></span>
+                  )}
+                </button>
+              </div>
+
+              {/* Status Message */}
+              <div className="text-[10px] leading-relaxed text-slate-500">
+                {voiceStatus === "idle" && (
+                  <p className="text-slate-500">{t.voiceAssistantIdle}</p>
+                )}
+                {voiceStatus === "listening" && (
+                  <p className="text-rose-600 font-medium flex items-center gap-1.5 animate-pulse">
+                    <span className="w-1.5 h-1.5 rounded-full bg-rose-600 inline-block animate-ping"></span>
+                    {t.voiceAssistantListening}
+                  </p>
+                )}
+                {voiceStatus === "parsing" && (
+                  <p className="text-amber-700 font-semibold flex items-center gap-1.5">
+                    <span className="w-3 h-3 border-2 border-amber-600 border-t-transparent rounded-full animate-spin inline-block"></span>
+                    {lang === "ar" ? "جاري معالجة الصوت بالذكاء الاصطناعي..." : "Processing transcript with Gemini AI..."}
+                  </p>
+                )}
+                {voiceStatus === "success" && (
+                  <p className="text-emerald-700 font-semibold">
+                    ✓ {t.voiceAssistantSuccess}
+                  </p>
+                )}
+                {voiceStatus === "error" && (
+                  <p className="text-rose-600 font-semibold">
+                    ⚠ {t.voiceAssistantError} {voiceErrorMsg && `(${voiceErrorMsg})`}
+                  </p>
+                )}
+                {voiceStatus === "unsupported" && (
+                  <p className="text-slate-500 font-semibold">
+                    ⚠ {t.voiceAssistantNotSupported}
+                  </p>
+                )}
+              </div>
+
+              {/* Spoken Text Display */}
+              {capturedTranscript && (
+                <div className="mt-1 bg-slate-50 border border-slate-100 rounded-lg p-2 text-[10px] font-mono text-slate-600 leading-snug">
+                  <span className="font-bold text-slate-500 block text-[9px] mb-0.5">
+                    {lang === "ar" ? "النص الملتقط:" : "Captured Transcript:"}
+                  </span>
+                  "{capturedTranscript}"
+                </div>
+              )}
+            </div>
+
             {/* Input - Design Type Selector */}
             <div>
               <label className="text-xs font-semibold text-slate-700 block mb-1.5 flex items-center gap-1.5">
@@ -1406,7 +1716,7 @@ export default function App() {
             </div>
 
             {/* Grid for People Count and Land Area */}
-            <div className="grid grid-cols-2 gap-3">
+            <div className="grid grid-cols-2 gap-3 mb-3">
               <div>
                 <label className="text-xs font-semibold text-slate-700 block mb-1.5 flex items-center gap-1.5">
                   <Users className="w-3.5 h-3.5 text-indigo-500" />
@@ -1441,6 +1751,47 @@ export default function App() {
                   className="w-full border border-slate-200 rounded-xl p-3 text-xs font-mono text-center focus:ring-2 focus:ring-indigo-500 focus:outline-none bg-slate-50/50"
                 />
               </div>
+            </div>
+
+            {/* Low-Cost Optimization Toggle */}
+            <div id="low-cost-optimization-container" className={`border rounded-xl p-3 flex flex-col gap-2 mb-3 transition-all duration-300 ${
+              input.lowCostOptimization 
+                ? (input.peopleCount >= 250 ? "border-amber-200 bg-amber-50/20" : "border-slate-100 bg-slate-50/40 opacity-75") 
+                : "border-slate-100 bg-slate-50/20"
+            }`}>
+              <label className="flex items-center justify-between cursor-pointer select-none">
+                <div className="flex items-center gap-2">
+                  <input
+                    id="low-cost-optimization-checkbox"
+                    type="checkbox"
+                    checked={!!input.lowCostOptimization}
+                    onChange={(e) => handleInputChange("lowCostOptimization", e.target.checked)}
+                    className="rounded border-slate-300 text-amber-600 focus:ring-amber-500 w-3.5 h-3.5 cursor-pointer"
+                  />
+                  <span className={`text-xs font-bold flex items-center gap-1.5 ${input.lowCostOptimization && input.peopleCount >= 250 ? "text-amber-800" : "text-slate-700"}`}>
+                    <Coins className={`w-3.5 h-3.5 ${input.lowCostOptimization && input.peopleCount >= 250 ? "text-amber-600 animate-bounce" : "text-slate-400"}`} />
+                    {t.lowCostOptimizationLabel}
+                  </span>
+                </div>
+                {/* Population Threshold Indicator */}
+                <span className={`text-[9px] font-black px-1.5 py-0.5 rounded-full transition-colors ${
+                  input.peopleCount >= 250 
+                    ? "bg-emerald-100 text-emerald-800" 
+                    : "bg-slate-100 text-slate-500"
+                }`}>
+                  {lang === "ar" ? `العدد: ${input.peopleCount}/250` : `Pop: ${input.peopleCount}/250`}
+                </span>
+              </label>
+              <p className={`text-[10px] leading-relaxed ${input.lowCostOptimization && input.peopleCount >= 250 ? "text-amber-700/90" : "text-slate-400"}`}>
+                {t.lowCostOptimizationDesc}
+              </p>
+              {input.lowCostOptimization && input.peopleCount < 250 && (
+                <span className="text-[9px] text-rose-500 font-semibold block mt-0.5 leading-snug animate-pulse">
+                  {lang === "ar" 
+                    ? "⚠️ يتطلب هذا الخيار وصول عدد الأشخاص المخطط إيواؤهم لـ 250 شخصاً أو أكثر لتفعيله في محرك التوليد."
+                    : "⚠️ This option requires a target population of 250+ people to activate in the generation engine."}
+                </span>
+              )}
             </div>
 
             {/* Demographic Classification Section */}
@@ -1570,6 +1921,26 @@ export default function App() {
                   );
                 })}
               </div>
+            </div>
+
+            {/* Sustainable Materials Toggle */}
+            <div id="sustainable-materials-toggle-container" className="border border-emerald-100 rounded-xl p-3 bg-emerald-50/20 flex flex-col gap-2">
+              <label className="flex items-center gap-2 cursor-pointer select-none">
+                <input
+                  id="sustainable-materials-checkbox"
+                  type="checkbox"
+                  checked={!!input.useSustainableMaterials}
+                  onChange={(e) => handleInputChange("useSustainableMaterials", e.target.checked)}
+                  className="rounded border-emerald-300 text-emerald-600 focus:ring-emerald-500 w-3.5 h-3.5"
+                />
+                <span className="text-xs font-bold text-emerald-800 flex items-center gap-1.5">
+                  <Leaf className="w-3.5 h-3.5 text-emerald-600 animate-pulse" />
+                  {t.sustainableMaterialsLabel}
+                </span>
+              </label>
+              <p className="text-[10px] text-emerald-600/95 leading-relaxed pl-5">
+                {t.sustainableMaterialsDesc}
+              </p>
             </div>
 
             {/* Action buttons */}
@@ -2059,7 +2430,13 @@ export default function App() {
                 ];
 
                 return (
-                  <div className="bg-white p-5 rounded-2xl shadow-sm border border-slate-100 flex flex-col gap-5">
+                  <motion.div 
+                    key={project ? (project.suggestedModel?.name || "") + "_" + score : 'empty'}
+                    initial={{ opacity: 0, y: 35 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ duration: 0.8, ease: [0.16, 1, 0.3, 1] }}
+                    className="bg-white p-5 rounded-2xl shadow-sm border border-slate-100 flex flex-col gap-5"
+                  >
                     
                     {/* Header */}
                     <div className="flex items-center justify-between pb-3 border-b border-slate-100">
@@ -2087,7 +2464,12 @@ export default function App() {
                     <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-center">
                       
                       {/* Safety Gauge / Dial (4 cols) */}
-                      <div className="lg:col-span-4 flex flex-col items-center justify-center p-4 bg-slate-50/50 rounded-2xl border border-slate-100 text-center self-stretch justify-around">
+                      <motion.div 
+                        initial={{ opacity: 0, y: 25 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        transition={{ duration: 0.6, ease: "easeOut" }}
+                        className="lg:col-span-4 flex flex-col items-center justify-center p-4 bg-slate-50/50 rounded-2xl border border-slate-100 text-center self-stretch justify-around"
+                      >
                         <span className="text-[10px] font-extrabold text-slate-400 uppercase tracking-wider">
                           {lang === "ar" ? "مؤشر السلامة الهندسية" : "Engineering Safety Indicator"}
                         </span>
@@ -2130,7 +2512,7 @@ export default function App() {
                               : "Score calculated dynamically based on soil composition, climate vectors, and disaster type."}
                           </p>
                         </div>
-                      </div>
+                      </motion.div>
 
                       {/* 7 Risks Bento Grid (8 cols) */}
                       <div className="lg:col-span-8 grid grid-cols-1 sm:grid-cols-2 gap-3.5">
@@ -2140,7 +2522,13 @@ export default function App() {
                           const desc = p.data?.description || "";
                           
                           return (
-                            <div key={idx} className="bg-white p-3 rounded-xl border border-slate-100 hover:border-indigo-100 hover:shadow-xs transition-all flex flex-col gap-1.5 text-right">
+                            <motion.div 
+                              key={p.id + "_" + score} 
+                              initial={{ opacity: 0, y: 15 }}
+                              animate={{ opacity: 1, y: 0 }}
+                              transition={{ duration: 0.5, delay: idx * 0.08, ease: "easeOut" }}
+                              className="bg-white p-3 rounded-xl border border-slate-100 hover:border-indigo-100 hover:shadow-xs transition-all flex flex-col gap-1.5 text-right"
+                            >
                               <div className={`flex justify-between items-start gap-2 ${lang === 'ar' ? 'flex-row-reverse' : 'flex-row'}`}>
                                 <div className={`flex items-center gap-2 ${lang === 'ar' ? 'flex-row-reverse' : 'flex-row'}`}>
                                   <div className="p-1.5 rounded-lg bg-slate-50 text-slate-600">
@@ -2156,7 +2544,7 @@ export default function App() {
                                   <p className="text-[10px] text-slate-500 leading-normal mt-0.5">{desc}</p>
                                 )}
                               </div>
-                            </div>
+                            </motion.div>
                           );
                         })}
                       </div>
@@ -2185,7 +2573,7 @@ export default function App() {
                       </div>
                     )}
 
-                  </div>
+                  </motion.div>
                 );
               })()}
 
@@ -2973,15 +3361,23 @@ export default function App() {
                               other: 0
                             };
 
+                            const isSustainable = !!project.input?.useSustainableMaterials;
+
                             project.billOfMaterials.forEach(item => {
                               const name = item.material.toLowerCase();
                               const cat = item.category.toLowerCase();
                               const qty = item.quantity;
                               
-                              let factor = 1.2; // default factor (kg CO2e per unit)
+                              let factor = isSustainable ? 0.15 : 1.2; // default factor (kg CO2e per unit)
                               
                               if (name.includes("خشب") || name.includes("wood") || name.includes("timber")) {
-                                factor = 0.35;
+                                factor = isSustainable ? 0.15 : 0.35;
+                              } else if (name.includes("بامبو") || name.includes("خيزران") || name.includes("bamboo")) {
+                                factor = 0.05; // sustainable bamboo
+                              } else if (name.includes("طين") || name.includes("clay") || name.includes("adobe") || name.includes("mud") || name.includes("تراب")) {
+                                factor = 0.02; // local clay
+                              } else if (name.includes("قش") || name.includes("straw") || name.includes("thatch") || name.includes("ألياف") || name.includes("fiber")) {
+                                factor = 0.01; // straw-bale and thatch
                               } else if (name.includes("ألومنيوم") || name.includes("aluminum")) {
                                 factor = 8.5;
                               } else if (name.includes("فولاذ") || name.includes("حديد") || name.includes("steel") || name.includes("metal")) {
@@ -3438,7 +3834,7 @@ export default function App() {
                   <p className="text-xs text-slate-400 mt-0.5">يمكنك تحميل التقارير الهندسية وجداول الكميات والخرائط بنقرة واحدة بمختلف الصيغ المطلوبة للتقديم الميداني.</p>
                 </div>
 
-                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-3">
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6 gap-3">
                   {/* Export PDF */}
                   <button
                     id="export-pdf-report-btn"
@@ -3496,6 +3892,25 @@ export default function App() {
                     <div>
                       <span className="font-bold text-xs text-slate-700 block">مخطط أوتوكاد CAD (DXF)</span>
                       <span className="text-[10px] text-slate-400 block mt-0.5">خطوط ومجسّمات CAD لرسومات DWG</span>
+                    </div>
+                  </button>
+
+                  {/* Export QR Code PNG */}
+                  <button
+                    id="export-qr-png-btn"
+                    onClick={downloadQRCodePNG}
+                    className="p-3 bg-slate-50 hover:bg-teal-50 border border-slate-100 hover:border-teal-100 rounded-xl text-right transition-all flex flex-col justify-between cursor-pointer"
+                  >
+                    <div className="p-2 bg-teal-50 text-teal-600 rounded-lg w-fit mb-2">
+                      <QrCode className="w-5 h-5" />
+                    </div>
+                    <div>
+                      <span className="font-bold text-xs text-slate-700 block">
+                        {t.btnExportQR}
+                      </span>
+                      <span className="text-[10px] text-slate-400 block mt-0.5">
+                        {lang === "ar" ? "تنزيل بطاقة الكود للطباعة الميدانية" : "Download QR card for on-site printing"}
+                      </span>
                     </div>
                   </button>
 

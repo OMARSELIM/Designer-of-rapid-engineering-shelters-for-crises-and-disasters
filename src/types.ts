@@ -11,6 +11,8 @@ export interface ProjectInput {
   elderlyCount?: number;
   disabledCount?: number;
   designType?: 'camp' | 'smart_city';
+  useSustainableMaterials?: boolean;
+  lowCostOptimization?: boolean;
 }
 
 export interface RoomItem {

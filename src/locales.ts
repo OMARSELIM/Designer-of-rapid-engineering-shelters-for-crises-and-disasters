@@ -36,6 +36,7 @@ export interface TranslationType {
   btnExportCSV: string;
   btnExportBIM: string;
   btnExportCAD: string;
+  btnExportQR: string;
   btnDelete: string;
   btnLoad: string;
   savedTitle: string;
@@ -91,6 +92,16 @@ export interface TranslationType {
   designTypeLabel: string;
   designTypeCamp: string;
   designTypeSmartCity: string;
+  sustainableMaterialsLabel: string;
+  sustainableMaterialsDesc: string;
+  lowCostOptimizationLabel: string;
+  lowCostOptimizationDesc: string;
+  voiceAssistantLabel: string;
+  voiceAssistantListening: string;
+  voiceAssistantIdle: string;
+  voiceAssistantNotSupported: string;
+  voiceAssistantSuccess: string;
+  voiceAssistantError: string;
   soilOptions: string[];
   disasterOptions: string[];
   climateOptions: string[];
@@ -137,6 +148,7 @@ export const translations: Record<"ar" | "en", TranslationType> = {
     btnExportCSV: "تصدير جدول الكميات (CSV)",
     btnExportBIM: "تصدير مخطط BIM (IFC)",
     btnExportCAD: "تصدير AutoCAD Script",
+    btnExportQR: "تحميل كود QR الميداني (PNG)",
     btnDelete: "حذف",
     btnLoad: "تحميل التصميم ←",
     savedTitle: "المشاريع والتصاميم المحفوظة (Saved Configurations)",
@@ -192,6 +204,16 @@ export const translations: Record<"ar" | "en", TranslationType> = {
     designTypeLabel: "نوع المخطط ونموذج الإعمار:",
     designTypeCamp: "مخيم إغاثي ميداني سريع (Emergency Camp)",
     designTypeSmartCity: "مدينة ذكية مؤقتة متكاملة (Smart City Generator)",
+    sustainableMaterialsLabel: "مواد بناء مستدامة وصديقة للبيئة",
+    sustainableMaterialsDesc: "عند التفعيل، يعطى الخيزران (البامبو) والطين المحلي والأخشاب الأولوية على الحديد والخرسانة لخفض الانبعاثات الكربونية.",
+    lowCostOptimizationLabel: "تحسين التكلفة والبدائل الاقتصادية",
+    lowCostOptimizationDesc: "تفعيل خيارات المواد منخفضة الميزانية (شديدة الاقتصادية كالصاج والمشمعات) لمواجهة التكاليف عند إيواء أعداد ضخمة.",
+    voiceAssistantLabel: "مساعد الإدخال الصوتي الميداني",
+    voiceAssistantListening: "جاري الاستماع... تحدث بوضوح باللغة العربية أو الإنجليزية (مثال: زلزال في حلب لـ 400 شخص)",
+    voiceAssistantIdle: "اضغط على المايك وتحدث لملء حقول الموقع، الكارثة، والعدد صوتياً بسرعة فائقة.",
+    voiceAssistantNotSupported: "عذراً، متصفحك لا يدعم خاصية التعرف على الصوت (Web Speech API).",
+    voiceAssistantSuccess: "تم معالجة الصوت وتحديث حقول الموقع والكارثة والعدد تلقائياً بنجاح!",
+    voiceAssistantError: "لم نتمكن من التقاط الصوت أو تحليل المدخلات بشكل صحيح، يرجى المحاولة مجدداً.",
     disasterOptions: [
       "زلزال",
       "فيضان",
@@ -267,6 +289,7 @@ export const translations: Record<"ar" | "en", TranslationType> = {
     btnExportCSV: "Export BOM as CSV",
     btnExportBIM: "Export BIM Model (IFC)",
     btnExportCAD: "Export AutoCAD DXF",
+    btnExportQR: "Download Field QR (PNG)",
     btnDelete: "Delete",
     btnLoad: "Load Design ←",
     savedTitle: "Saved Scenarios & Configurations",
@@ -322,6 +345,16 @@ export const translations: Record<"ar" | "en", TranslationType> = {
     designTypeLabel: "Layout Type & Urban Architecture Model:",
     designTypeCamp: "Emergency Rapid Field Camp",
     designTypeSmartCity: "Temporary Smart City Generator",
+    sustainableMaterialsLabel: "Sustainable Materials",
+    sustainableMaterialsDesc: "Prioritizes bamboo, local clay, and timber options over steel or concrete, reducing calculated CO₂ impact.",
+    lowCostOptimizationLabel: "Low-Cost Optimization",
+    lowCostOptimizationDesc: "Prioritizes ultra-budget alternative materials (corrugated iron, tarpaulins) when scaling up for extremely large populations.",
+    voiceAssistantLabel: "Field Voice Assistant",
+    voiceAssistantListening: "Listening... Speak clearly in English or Arabic (e.g. 'Flood in Chittagong for 800 people')",
+    voiceAssistantIdle: "Click micro and speak to auto-fill location, hazard type, and population size in seconds.",
+    voiceAssistantNotSupported: "Speech recognition is not supported in this browser (Web Speech API).",
+    voiceAssistantSuccess: "Voice input successfully processed! Fields have been auto-filled.",
+    voiceAssistantError: "Could not capture voice or parse inputs correctly. Please try again.",
     disasterOptions: [
       "Earthquake",
       "Flood",
